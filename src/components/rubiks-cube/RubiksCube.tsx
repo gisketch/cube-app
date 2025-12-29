@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 
 const CUBE_SIZE = 0.95
-const GAP = 0.01
+const GAP = 0.00 // Very small gap
 const OFFSET = 1 + GAP
 
 // Stickerless colors (vibrant)
@@ -28,9 +28,9 @@ interface CubieFaceProps {
 }
 
 // Geometry constants
-const FACE_SIZE = CUBE_SIZE * 0.41 // Reduced to avoid intersection
+const FACE_SIZE = CUBE_SIZE * 0.48 // Increased back to cover more
 const EXTRUDE_SETTINGS = {
-  depth: 0.06, // Thinner caps
+  depth: 0.04, // Thin cap
   bevelEnabled: true,
   bevelThickness: 0.02,
   bevelSize: 0.02,
@@ -39,7 +39,7 @@ const EXTRUDE_SETTINGS = {
 
 function createCornerShape(): THREE.Shape {
   const size = FACE_SIZE
-  const radius = 0.06 // Scaled down
+  const radius = 0.08
   const shape = new THREE.Shape()
 
   shape.moveTo(-size + radius, -size)
@@ -57,8 +57,8 @@ function createCornerShape(): THREE.Shape {
 
 function createEdgeShape(): THREE.Shape {
   const size = FACE_SIZE
-  const smallRadius = 0.03 // Scaled down
-  const bigRadius = 0.22 // Scaled down
+  const smallRadius = 0.04
+  const bigRadius = 0.25
 
   const shape = new THREE.Shape()
 
@@ -173,8 +173,8 @@ function getFaceRotation(
     // Bottom Face (y=-1). Default Up points to Front (+z)
     if (z === 1) return 0 // Front Edge -> Rotate 0
     if (z === -1) return Math.PI // Back Edge -> Rotate 180
-    if (x === 1) return Math.PI / 2 // Right Edge -> Rotate 90
-    if (x === -1) return -Math.PI / 2 // Left Edge -> Rotate -90
+    if (x === 1) return -Math.PI / 2 // Right Edge -> Rotate -90
+    if (x === -1) return Math.PI / 2 // Left Edge -> Rotate 90
   }
 
   if (face === 'front') {
@@ -214,24 +214,61 @@ function getFaceRotation(
 
 function Cubie({ position, colors, pieceType, coords, name }: CubieProps & { name: string }) {
   // Position faces slightly outside the inner box
-  // Inner box is 0.85 size, so half is 0.425.
-  // We want faces to start around there.
   const faceOffset = CUBE_SIZE * 0.46
+
+  // Custom geometry for center piece body
+  const centerBodyGeometry = useMemo(() => {
+    if (pieceType !== 'center') return null
+    const shape = createCenterShape()
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: CUBE_SIZE * 0.92,
+      bevelEnabled: true,
+      bevelThickness: 0.02,
+      bevelSize: 0.02,
+      bevelSegments: 4,
+    })
+    geo.center()
+    return geo
+  }, [pieceType])
 
   return (
     <group position={position} name={name}>
-      {/* Inner black mechanism - Rounded to avoid sharp corners protruding */}
-      <RoundedBox
-        args={[CUBE_SIZE * 0.94, CUBE_SIZE * 0.94, CUBE_SIZE * 0.94]}
-        radius={0.12}
-        smoothness={4}
-      >
-        <meshStandardMaterial
-          color={COLORS.inner}
-          roughness={0.6}
-          metalness={0.4}
-        />
-      </RoundedBox>
+      {/* Inner black mechanism */}
+      {pieceType === 'center' ? (
+        // For center pieces, use the hexagonal shape for the body too
+        // We need to rotate it to match the face orientation
+        <group rotation={
+          // Determine rotation based on which face is colored
+          colors.top ? [-Math.PI / 2, 0, 0] :
+          colors.bottom ? [Math.PI / 2, 0, 0] :
+          colors.front ? [0, 0, 0] :
+          colors.back ? [0, Math.PI, 0] :
+          colors.right ? [0, Math.PI / 2, 0] :
+          colors.left ? [0, -Math.PI / 2, 0] : [0, 0, 0]
+        }>
+          <mesh geometry={centerBodyGeometry!}>
+            <meshStandardMaterial
+              color={COLORS.inner}
+              roughness={0.6}
+              metalness={0.4}
+            />
+          </mesh>
+        </group>
+      ) : (
+        // For corners and edges, use a slightly smaller rounded box
+        // This prevents the "ball inside" look while keeping it smooth
+        <RoundedBox
+          args={[CUBE_SIZE * 0.96, CUBE_SIZE * 0.96, CUBE_SIZE * 0.96]}
+          radius={0.08} // Sharper corners to match faces better
+          smoothness={4}
+        >
+          <meshStandardMaterial
+            color={COLORS.inner}
+            roughness={0.6}
+            metalness={0.4}
+          />
+        </RoundedBox>
+      )}
 
       {colors.top && (
         <group position={[0, faceOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
