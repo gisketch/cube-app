@@ -1,8 +1,10 @@
 import * as THREE from 'three'
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { RoundedBox } from '@react-three/drei'
 
 const CUBE_SIZE = 0.95
-const GAP = 0.05
+const GAP = 0.01
 const OFFSET = 1 + GAP
 
 // Stickerless colors (vibrant)
@@ -13,7 +15,7 @@ const COLORS = {
   orange: '#ff5900',
   blue: '#0045ad',
   green: '#009b48',
-  inner: '#0a0a0a', // Darker black for internals
+  inner: '#0a0a0a',
 }
 
 type PieceType = 'corner' | 'edge' | 'center'
@@ -26,9 +28,9 @@ interface CubieFaceProps {
 }
 
 // Geometry constants
-const FACE_SIZE = CUBE_SIZE * 0.48 // Almost full coverage (0.96 total width)
+const FACE_SIZE = CUBE_SIZE * 0.41 // Reduced to avoid intersection
 const EXTRUDE_SETTINGS = {
-  depth: 0.05,
+  depth: 0.06, // Thinner caps
   bevelEnabled: true,
   bevelThickness: 0.02,
   bevelSize: 0.02,
@@ -37,7 +39,7 @@ const EXTRUDE_SETTINGS = {
 
 function createCornerShape(): THREE.Shape {
   const size = FACE_SIZE
-  const radius = 0.08 // Small radius for "square sharp" look
+  const radius = 0.06 // Scaled down
   const shape = new THREE.Shape()
 
   shape.moveTo(-size + radius, -size)
@@ -55,8 +57,8 @@ function createCornerShape(): THREE.Shape {
 
 function createEdgeShape(): THREE.Shape {
   const size = FACE_SIZE
-  const smallRadius = 0.04 // Sharp-ish
-  const bigRadius = 0.25 // Rounded (inside)
+  const smallRadius = 0.03 // Scaled down
+  const bigRadius = 0.22 // Scaled down
 
   const shape = new THREE.Shape()
 
@@ -210,21 +212,26 @@ function getFaceRotation(
   return 0
 }
 
-function Cubie({ position, colors, pieceType, coords }: CubieProps) {
+function Cubie({ position, colors, pieceType, coords, name }: CubieProps & { name: string }) {
   // Position faces slightly outside the inner box
-  const faceOffset = CUBE_SIZE / 2
+  // Inner box is 0.85 size, so half is 0.425.
+  // We want faces to start around there.
+  const faceOffset = CUBE_SIZE * 0.46
 
   return (
-    <group position={position}>
-      {/* Inner black mechanism */}
-      <mesh>
-        <boxGeometry args={[CUBE_SIZE * 0.98, CUBE_SIZE * 0.98, CUBE_SIZE * 0.98]} />
+    <group position={position} name={name}>
+      {/* Inner black mechanism - Rounded to avoid sharp corners protruding */}
+      <RoundedBox
+        args={[CUBE_SIZE * 0.94, CUBE_SIZE * 0.94, CUBE_SIZE * 0.94]}
+        radius={0.12}
+        smoothness={4}
+      >
         <meshStandardMaterial
           color={COLORS.inner}
-          roughness={0.5}
-          metalness={0.5}
+          roughness={0.6}
+          metalness={0.4}
         />
-      </mesh>
+      </RoundedBox>
 
       {colors.top && (
         <group position={[0, faceOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -308,35 +315,171 @@ function getCubieColors(
   return colors
 }
 
-export function RubiksCube() {
-  const cubies: ReactNode[] = []
+export interface RubiksCubeRef {
+  performMove: (move: string) => void
+}
 
-  for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-      for (let z = -1; z <= 1; z++) {
-        if (x === 0 && y === 0 && z === 0) continue
-
-        const key = `${x}-${y}-${z}`
-        const position: [number, number, number] = [
-          x * OFFSET,
-          y * OFFSET,
-          z * OFFSET,
-        ]
-        const colors = getCubieColors(x, y, z)
-        const pieceType = getPieceType(x, y, z)
-
-        cubies.push(
-          <Cubie
-            key={key}
-            position={position}
-            colors={colors}
-            pieceType={pieceType}
-            coords={{ x, y, z }}
-          />
-        )
+export const RubiksCube = forwardRef<RubiksCubeRef>((_, ref) => {
+  const groupRef = useRef<THREE.Group>(null)
+  const isAnimating = useRef(false)
+  
+  // Store logical state of the cube
+  // Map of position string "x,y,z" to current cubie data
+  const [cubeState, setCubeState] = useState<{
+    [key: string]: {
+      initialPos: [number, number, number]
+      currentPos: [number, number, number]
+      rotation: [number, number, number]
+      colors: CubieProps['colors']
+      pieceType: PieceType
+      name: string
+    }
+  }>(() => {
+    const state: any = {}
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
+        for (let z = -1; z <= 1; z++) {
+          if (x === 0 && y === 0 && z === 0) continue
+          const key = `${x},${y},${z}`
+          state[key] = {
+            initialPos: [x * OFFSET, y * OFFSET, z * OFFSET],
+            currentPos: [x, y, z],
+            rotation: [0, 0, 0],
+            colors: getCubieColors(x, y, z),
+            pieceType: getPieceType(x, y, z),
+            name: key
+          }
+        }
       }
     }
-  }
+    return state
+  })
 
-  return <group>{cubies}</group>
-}
+  // Animation state
+  const animationQueue = useRef<{ axis: 'x'|'y'|'z', layer: number, angle: number }[]>([])
+  const currentAnimation = useRef<{ 
+    axis: 'x'|'y'|'z', 
+    layer: number, 
+    targetAngle: number, 
+    currentAngle: number,
+    cubies: THREE.Object3D[] 
+  } | null>(null)
+
+  useImperativeHandle(ref, () => ({
+    performMove: (move: string) => {
+      const moveMap: any = {
+        'U': { axis: 'y', layer: 1, angle: -Math.PI / 2 },
+        "U'": { axis: 'y', layer: 1, angle: Math.PI / 2 },
+        'D': { axis: 'y', layer: -1, angle: Math.PI / 2 },
+        "D'": { axis: 'y', layer: -1, angle: -Math.PI / 2 },
+        'L': { axis: 'x', layer: -1, angle: Math.PI / 2 },
+        "L'": { axis: 'x', layer: -1, angle: -Math.PI / 2 },
+        'R': { axis: 'x', layer: 1, angle: -Math.PI / 2 },
+        "R'": { axis: 'x', layer: 1, angle: Math.PI / 2 },
+        'F': { axis: 'z', layer: 1, angle: -Math.PI / 2 },
+        "F'": { axis: 'z', layer: 1, angle: Math.PI / 2 },
+        'B': { axis: 'z', layer: -1, angle: Math.PI / 2 },
+        "B'": { axis: 'z', layer: -1, angle: -Math.PI / 2 },
+      }
+      
+      if (moveMap[move]) {
+        animationQueue.current.push(moveMap[move])
+      }
+    }
+  }))
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return
+
+    // Start new animation if queue has items and not currently animating
+    if (!currentAnimation.current && animationQueue.current.length > 0) {
+      const nextMove = animationQueue.current.shift()!
+      
+      // Find cubies in the layer
+      const targetCubies: THREE.Object3D[] = []
+      
+      // We need to find which cubies are currently in the target layer
+      // Since we rotate the objects, their world position changes.
+      // We can check their position relative to the group.
+      
+      groupRef.current.children.forEach(child => {
+        // Round position to nearest integer to handle float errors
+        const x = Math.round(child.position.x / OFFSET)
+        const y = Math.round(child.position.y / OFFSET)
+        const z = Math.round(child.position.z / OFFSET)
+        
+        if (nextMove.axis === 'x' && x === nextMove.layer) targetCubies.push(child)
+        if (nextMove.axis === 'y' && y === nextMove.layer) targetCubies.push(child)
+        if (nextMove.axis === 'z' && z === nextMove.layer) targetCubies.push(child)
+      })
+
+      currentAnimation.current = {
+        ...nextMove,
+        currentAngle: 0,
+        targetAngle: nextMove.angle,
+        cubies: targetCubies
+      }
+    }
+
+    // Process current animation
+    if (currentAnimation.current) {
+      const anim = currentAnimation.current
+      const speed = 10 // Animation speed
+      const step = anim.targetAngle > 0 ? speed * delta : -speed * delta
+      
+      let finished = false
+      let rotationStep = step
+      
+      // Check if we overshoot or reach target
+      if ((anim.targetAngle > 0 && anim.currentAngle + step >= anim.targetAngle) ||
+          (anim.targetAngle < 0 && anim.currentAngle + step <= anim.targetAngle)) {
+        rotationStep = anim.targetAngle - anim.currentAngle
+        finished = true
+      }
+
+      // Apply rotation to each cubie
+      // We rotate around the world axis (0,0,0)
+      const axisVector = new THREE.Vector3(
+        anim.axis === 'x' ? 1 : 0,
+        anim.axis === 'y' ? 1 : 0,
+        anim.axis === 'z' ? 1 : 0
+      )
+
+      anim.cubies.forEach(cubie => {
+        // Rotate position
+        cubie.position.applyAxisAngle(axisVector, rotationStep)
+        // Rotate orientation
+        cubie.rotateOnWorldAxis(axisVector, rotationStep)
+      })
+
+      anim.currentAngle += rotationStep
+
+      if (finished) {
+        // Snap positions to grid to prevent drift
+        anim.cubies.forEach(cubie => {
+          cubie.position.x = Math.round(cubie.position.x / OFFSET) * OFFSET
+          cubie.position.y = Math.round(cubie.position.y / OFFSET) * OFFSET
+          cubie.position.z = Math.round(cubie.position.z / OFFSET) * OFFSET
+          
+          cubie.updateMatrix()
+        })
+        currentAnimation.current = null
+      }
+    }
+  })
+
+  return (
+    <group ref={groupRef}>
+      {Object.values(cubeState).map((cubie) => (
+        <Cubie
+          key={cubie.name}
+          name={cubie.name}
+          position={cubie.initialPos}
+          colors={cubie.colors}
+          pieceType={cubie.pieceType}
+          coords={{ x: cubie.currentPos[0], y: cubie.currentPos[1], z: cubie.currentPos[2] }}
+        />
+      ))}
+    </group>
+  )
+})
