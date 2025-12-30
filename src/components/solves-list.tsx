@@ -1,20 +1,12 @@
-import { Trash2, ChevronDown, ChevronUp, Play } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo } from 'react'
+import { Trash2, BarChart3, Play } from 'lucide-react'
 import type { Solve } from '@/hooks/useSolves'
-import { SolveReplay } from './solve-replay'
+import { createSolvedCube, applyMove, COLOR_HEX, type CubeFaces } from '@/lib/cube-faces'
 
 interface SolvesListProps {
   solves: Solve[]
   onDelete?: (id: string) => void
-}
-
-const CROSS_COLOR_MAP: Record<string, string> = {
-  W: '#FFFFFF',
-  Y: '#FFEB3B',
-  G: '#4CAF50',
-  B: '#2196F3',
-  R: '#F44336',
-  O: '#FF9800',
+  onViewDetails?: (solve: Solve) => void
 }
 
 function formatTime(ms: number): string {
@@ -29,98 +21,114 @@ function formatTime(ms: number): string {
   return `${seconds}.${centiseconds.toString().padStart(2, '0')}`
 }
 
-function SolveItem({
+function getScrambledState(scramble: string): CubeFaces {
+  const moves = scramble.trim().split(/\s+/).filter((m) => m.length > 0)
+  let cube = createSolvedCube()
+  for (const move of moves) {
+    cube = applyMove(cube, move)
+  }
+  return cube
+}
+
+function MiniFace({ face }: { face: string[] }) {
+  return (
+    <div className="grid grid-cols-3 gap-[1px]" style={{ width: 27, height: 27 }}>
+      {face.map((color, i) => (
+        <div
+          key={i}
+          className="rounded-[1px]"
+          style={{
+            backgroundColor: COLOR_HEX[color as keyof typeof COLOR_HEX] || '#888',
+            width: 8,
+            height: 8,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SolveRow({
   solve,
   index,
   total,
   onDelete,
-  onReplay,
+  onViewDetails,
 }: {
   solve: Solve
   index: number
   total: number
   onDelete?: (id: string) => void
-  onReplay?: (solve: Solve) => void
+  onViewDetails?: (solve: Solve) => void
 }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const scrambledState = useMemo(() => getScrambledState(solve.scramble), [solve.scramble])
+  const solveNumber = total - index
+
+  const handleRowClick = () => {
+    if (onViewDetails) {
+      onViewDetails(solve)
+    }
+  }
 
   return (
-    <div className="rounded-lg bg-white/5 transition-colors hover:bg-white/10">
-      <div
-        className="flex cursor-pointer items-center justify-between px-4 py-3"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-4">
-          <span className="w-8 text-sm text-white/40">#{total - index}</span>
-          <span className="font-mono text-xl text-white">{formatTime(solve.time)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/30">
-            {new Date(solve.date).toLocaleDateString()}
-          </span>
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-white/40" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-white/40" />
-          )}
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className="border-t border-white/10 px-4 py-3">
-          <div className="mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-white/40">Scramble</span>
-            <p className="mt-1 font-mono text-sm text-white/70">{solve.scramble}</p>
-          </div>
-          {solve.solution.length > 0 && (
-            <div className="mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-white/40">
-                Solution ({solve.solution.length} moves)
-              </span>
-              <p className="mt-1 font-mono text-sm text-white/70">{solve.solution.join(' ')}</p>
-            </div>
-          )}
-          {solve.cfopAnalysis && (
-            <div className="mb-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-white/40">
-                CFOP Breakdown
-              </span>
-              <div className="mt-2 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full border border-white/30" 
-                    style={{ backgroundColor: CROSS_COLOR_MAP[solve.cfopAnalysis.crossColor] }}
-                  />
-                  <span className="text-xs text-white/50 w-16">Cross</span>
-                  <span className="font-mono text-xs text-white/70">
-                    {solve.cfopAnalysis.cross.skipped ? 'Skipped' : solve.cfopAnalysis.cross.moves.join(' ')}
-                  </span>
-                </div>
-                {solve.cfopAnalysis.f2l.map((slot, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5" />
-                    <span className="text-xs text-white/50 w-16">F2L #{i + 1}</span>
-                    <span className="font-mono text-xs text-white/70">
-                      {slot.skipped ? 'Skipped' : slot.moves.join(' ')}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5" />
-                  <span className="text-xs text-white/50 w-16">OLL</span>
-                  <span className="font-mono text-xs text-white/70">
-                    {solve.cfopAnalysis.oll.skipped ? 'Skipped' : solve.cfopAnalysis.oll.moves.join(' ')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5" />
-                  <span className="text-xs text-white/50 w-16">PLL</span>
-                  <span className="font-mono text-xs text-white/70">
-                    {solve.cfopAnalysis.pll.skipped ? 'Skipped' : solve.cfopAnalysis.pll.moves.join(' ')}
-                  </span>
-                </div>
-              </div>
-            </div>
+    <tr
+      className="cursor-pointer transition-colors"
+      style={{ borderBottom: '1px solid var(--theme-subAlt)' }}
+      onClick={handleRowClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--theme-bgSecondary)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'transparent'
+      }}
+    >
+      <td className="px-3 py-3 text-center" style={{ color: 'var(--theme-sub)', width: 50 }}>
+        <span className="text-sm font-medium">#{solveNumber}</span>
+      </td>
+      <td className="px-3 py-3" style={{ width: 45 }}>
+        <MiniFace face={scrambledState.F} />
+      </td>
+      <td className="px-4 py-3" style={{ width: 100 }}>
+        <span
+          className="font-mono text-lg font-semibold"
+          style={{ color: 'var(--theme-text)' }}
+        >
+          {formatTime(solve.time)}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span
+          className="line-clamp-1 font-mono text-xs"
+          style={{ color: 'var(--theme-sub)' }}
+        >
+          {solve.scramble}
+        </span>
+      </td>
+      <td className="px-3 py-3 text-right" style={{ width: 120 }}>
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (onViewDetails) onViewDetails(solve)
+            }}
+            className="rounded p-1.5 transition-colors hover:opacity-80"
+            style={{ color: 'var(--theme-accent)' }}
+            title="Full Stats"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </button>
+          {solve.solution.length > 0 && solve.gyroData && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (onViewDetails) onViewDetails(solve)
+              }}
+              className="rounded p-1.5 transition-colors hover:opacity-80"
+              style={{ color: 'var(--theme-accent)' }}
+              title="Replay"
+            >
+              <Play className="h-4 w-4" />
+            </button>
           )}
           {onDelete && (
             <button
@@ -128,36 +136,26 @@ function SolveItem({
                 e.stopPropagation()
                 onDelete(solve.id)
               }}
-              className="mt-2 flex items-center gap-1 text-xs text-red-400 hover:text-red-300"
+              className="rounded p-1.5 transition-colors hover:opacity-80"
+              style={{ color: 'var(--theme-error)' }}
+              title="Delete"
             >
-              <Trash2 className="h-3 w-3" />
-              Delete
-            </button>
-          )}
-          {onReplay && solve.solution.length > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onReplay(solve)
-              }}
-              className="mt-2 ml-4 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
-            >
-              <Play className="h-3 w-3" />
-              Replay
+              <Trash2 className="h-4 w-4" />
             </button>
           )}
         </div>
-      )}
-    </div>
+      </td>
+    </tr>
   )
 }
 
-export function SolvesList({ solves, onDelete }: SolvesListProps) {
-  const [replaySolve, setReplaySolve] = useState<Solve | null>(null)
-
+export function SolvesList({ solves, onDelete, onViewDetails }: SolvesListProps) {
   if (solves.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-white/40">
+      <div
+        className="flex h-64 flex-col items-center justify-center"
+        style={{ color: 'var(--theme-sub)' }}
+      >
         <p className="text-lg">No solves yet</p>
         <p className="mt-1 text-sm">Complete a solve to see it here</p>
       </div>
@@ -165,22 +163,55 @@ export function SolvesList({ solves, onDelete }: SolvesListProps) {
   }
 
   return (
-    <>
-      {replaySolve && (
-        <SolveReplay solve={replaySolve} onClose={() => setReplaySolve(null)} />
-      )}
-      <div className="flex flex-col gap-2">
-        {solves.map((solve, index) => (
-          <SolveItem
-            key={solve.id}
-            solve={solve}
-            index={index}
-            total={solves.length}
-            onDelete={onDelete}
-            onReplay={setReplaySolve}
-          />
-        ))}
-      </div>
-    </>
+    <div className="overflow-x-auto">
+      <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--theme-subAlt)' }}>
+            <th
+              className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--theme-sub)', width: 50 }}
+            >
+              #
+            </th>
+            <th
+              className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--theme-sub)', width: 45 }}
+            >
+              
+            </th>
+            <th
+              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--theme-sub)', width: 100 }}
+            >
+              Time
+            </th>
+            <th
+              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--theme-sub)' }}
+            >
+              Scramble
+            </th>
+            <th
+              className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--theme-sub)', width: 120 }}
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {solves.map((solve, index) => (
+            <SolveRow
+              key={solve.id}
+              solve={solve}
+              index={index}
+              total={solves.length}
+              onDelete={onDelete}
+              onViewDetails={onViewDetails}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

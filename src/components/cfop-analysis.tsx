@@ -25,22 +25,28 @@ function PhaseRow({
   colorDot?: string
 }) {
   return (
-    <div className="flex flex-col gap-1 py-2 border-b border-neutral-700 last:border-b-0">
+    <div 
+      className="flex flex-col gap-1 py-2 last:border-b-0"
+      style={{ borderBottom: '1px solid var(--theme-subAlt)' }}
+    >
       <div className="flex items-center gap-2">
         {colorDot && (
           <div 
-            className="w-3 h-3 rounded-full border border-neutral-500" 
-            style={{ backgroundColor: colorDot }}
+            className="w-3 h-3 rounded-full"
+            style={{ 
+              backgroundColor: colorDot,
+              border: '1px solid var(--theme-sub)'
+            }}
           />
         )}
-        <span className="text-sm font-medium text-neutral-300">{name}</span>
-        <span className="text-xs text-neutral-500">({skipped ? 0 : moves.length} moves)</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--theme-text)' }}>{name}</span>
+        <span className="text-xs" style={{ color: 'var(--theme-sub)' }}>({skipped ? 0 : moves.length} moves)</span>
       </div>
-      <div className="text-sm text-neutral-400 font-mono pl-5">
+      <div className="text-sm font-mono pl-5" style={{ color: 'var(--theme-sub)' }}>
         {skipped ? (
-          <span className="text-neutral-500 italic">Skipped</span>
+          <span className="italic">Skipped</span>
         ) : (
-          moves.join(' ') || <span className="text-neutral-500 italic">—</span>
+          moves.join(' ') || <span className="italic">—</span>
         )}
       </div>
     </div>
@@ -50,7 +56,10 @@ function PhaseRow({
 export function CFOPAnalysisDisplay({ analysis }: CFOPAnalysisDisplayProps) {
   if (!analysis) {
     return (
-      <div className="bg-neutral-800 rounded-lg p-4 text-neutral-500 text-sm">
+      <div 
+        className="rounded-lg p-4 text-sm"
+        style={{ backgroundColor: 'var(--theme-bgSecondary)', color: 'var(--theme-sub)' }}
+      >
         No CFOP analysis available yet. Complete a solve to see the breakdown.
       </div>
     )
@@ -63,10 +72,10 @@ export function CFOPAnalysisDisplay({ analysis }: CFOPAnalysisDisplayProps) {
     analysis.pll.moves.length
 
   return (
-    <div className="bg-neutral-800 rounded-lg p-4">
+    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--theme-bgSecondary)' }}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-white">CFOP Analysis</h3>
-        <span className="text-sm text-neutral-400">{totalMoves} total moves</span>
+        <h3 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>CFOP Analysis</h3>
+        <span className="text-sm" style={{ color: 'var(--theme-sub)' }}>{totalMoves} total moves</span>
       </div>
       
       <div className="space-y-0">

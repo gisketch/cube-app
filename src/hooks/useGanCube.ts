@@ -9,6 +9,7 @@ export interface GanCubeState {
   deviceName: string | null
   isMacAddressRequired: boolean
   debugLog: string[]
+  batteryLevel: number | null
 }
 
 export function useGanCube(onMove?: (move: string) => void) {
@@ -19,6 +20,7 @@ export function useGanCube(onMove?: (move: string) => void) {
     deviceName: null,
     isMacAddressRequired: false,
     debugLog: [],
+    batteryLevel: null,
   })
 
   const addLog = useCallback((msg: string) => {
@@ -46,31 +48,23 @@ export function useGanCube(onMove?: (move: string) => void) {
       if (event.type === 'GYRO') {
         const { x, y, z, w } = event.quaternion
 
-        // Map GAN coordinate system to Three.js
-        // GAN: X=Red(Right), Y=Blue(Back), Z=White(Top)
-        // Three: X=Right, Y=Top, Z=Front
-
-        // Mapping:
-        // Three X = GAN X
-        // Three Y = GAN Z
-        // Three Z = -GAN Y
-
         const rawQuat = new THREE.Quaternion(x, z, -y, w)
         rawQuaternionRef.current.copy(rawQuat)
 
-        // Apply offset: displayed = offset * raw
         const correctedQuat = gyroOffsetRef.current.clone().multiply(rawQuat)
 
-        // Update ref directly, no state update
         quaternionRef.current.copy(correctedQuat)
       } else if (event.type === 'MOVE') {
         const msg = `MOVE: ${event.move} (face: ${event.face}, dir: ${event.direction})`
         console.log(msg)
         addLog(msg)
         onMoveRef.current?.(event.move)
+      } else if (event.type === 'BATTERY') {
+        addLog(`Battery: ${event.batteryLevel}%`)
+        setState((prev) => ({ ...prev, batteryLevel: event.batteryLevel }))
       } else if (event.type === 'DISCONNECT') {
         addLog('Disconnected')
-        setState((prev) => ({ ...prev, isConnected: false }))
+        setState((prev) => ({ ...prev, isConnected: false, batteryLevel: null }))
         connectionRef.current = null
       } else {
         addLog(`Event: ${event.type}`)

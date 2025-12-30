@@ -1,12 +1,32 @@
 export type Color = 'W' | 'Y' | 'G' | 'B' | 'R' | 'O'
 
-export const COLOR_HEX: Record<Color, string> = {
+export const DEFAULT_COLOR_HEX: Record<Color, string> = {
   W: '#ffffff',
   Y: '#ffd500',
   G: '#009b48',
   B: '#0045ad',
   R: '#b90000',
   O: '#ff5900',
+}
+
+export let COLOR_HEX: Record<Color, string> = { ...DEFAULT_COLOR_HEX }
+
+export function setCubeFaceColors(colors: {
+  cubeWhite: string
+  cubeYellow: string
+  cubeGreen: string
+  cubeBlue: string
+  cubeRed: string
+  cubeOrange: string
+}): void {
+  COLOR_HEX = {
+    W: colors.cubeWhite,
+    Y: colors.cubeYellow,
+    G: colors.cubeGreen,
+    B: colors.cubeBlue,
+    R: colors.cubeRed,
+    O: colors.cubeOrange,
+  }
 }
 
 export interface CubeFaces {

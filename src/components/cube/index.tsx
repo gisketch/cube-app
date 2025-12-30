@@ -1,6 +1,6 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
-import { RubiksCube, type RubiksCubeRef } from './RubiksCube'
+import { RubiksCube, type RubiksCubeRef, type CubeColors } from './RubiksCube'
 import { useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import type { KPattern } from 'cubing/kpuzzle'
@@ -25,9 +25,11 @@ interface CubeViewerProps {
   quaternionRef?: React.MutableRefObject<THREE.Quaternion>
   cubeRef?: React.RefObject<RubiksCubeRef | null>
   config?: SceneConfig
+  animationSpeed?: number
+  cubeColors?: CubeColors
 }
 
-export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config = DEFAULT_CONFIG }: CubeViewerProps) {
+export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config = DEFAULT_CONFIG, animationSpeed, cubeColors }: CubeViewerProps) {
   const internalRef = useRef<RubiksCubeRef>(null)
   const ref = cubeRef || internalRef
 
@@ -45,7 +47,7 @@ export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config =
           intensity={config.light.directional2.intensity}
         />
         <group scale={config.cube.scale}>
-          <RubiksCube ref={ref} quaternionRef={quaternionRef} pattern={pattern} facelets={facelets} materialConfig={config.material} />
+          <RubiksCube ref={ref} quaternionRef={quaternionRef} pattern={pattern} facelets={facelets} materialConfig={config.material} animationSpeed={animationSpeed} cubeColors={cubeColors} />
         </group>
         <OrbitControls
           enablePan={false}
@@ -60,4 +62,4 @@ export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config =
   )
 }
 
-export { type RubiksCubeRef }
+export { type RubiksCubeRef, type CubeColors }

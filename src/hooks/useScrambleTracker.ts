@@ -8,6 +8,8 @@ import {
   type ParsedMove,
 } from '@/lib/move-utils'
 
+export type { ParsedMove }
+
 export interface ScrambleMoveState {
   move: ParsedMove
   originalMove: ParsedMove

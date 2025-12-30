@@ -1,7 +1,7 @@
-import { Timer, ListOrdered, Bluetooth, RefreshCw, Settings2, FlaskConical } from 'lucide-react'
+import { Timer, ListOrdered, Bluetooth, RefreshCw, Settings2, FlaskConical, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'timer' | 'solves' | 'simulator'
+type TabType = 'timer' | 'solves' | 'simulator' | 'settings'
 
 interface SidebarProps {
   activeTab: TabType
@@ -28,12 +28,22 @@ export function Sidebar({
     { id: 'timer' as const, label: 'Timer', icon: Timer },
     { id: 'solves' as const, label: 'Solves', icon: ListOrdered },
     { id: 'simulator' as const, label: 'Simulator', icon: FlaskConical },
+    { id: 'settings' as const, label: 'Settings', icon: Settings },
   ]
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-full w-16 flex-col items-center border-r border-white/10 bg-black/40 py-4 backdrop-blur-xl">
-      <div className="mb-8 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-orange-500">
-        <span className="text-lg font-bold text-white">C</span>
+    <aside 
+      className="fixed left-0 top-0 z-40 flex h-full w-16 flex-col items-center py-4"
+      style={{ 
+        backgroundColor: 'var(--theme-bgSecondary)',
+        borderRight: '1px solid var(--theme-subAlt)'
+      }}
+    >
+      <div 
+        className="mb-8 flex h-10 w-10 items-center justify-center rounded-lg"
+        style={{ backgroundColor: 'var(--theme-accent)' }}
+      >
+        <span className="text-lg font-bold" style={{ color: 'var(--theme-bg)' }}>C</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-2">
@@ -46,15 +56,19 @@ export function Sidebar({
               onClick={() => onTabChange(tab.id)}
               className={cn(
                 'group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-200',
-                isActive
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white/80',
               )}
+              style={{
+                backgroundColor: isActive ? 'var(--theme-subAlt)' : 'transparent',
+                color: isActive ? 'var(--theme-text)' : 'var(--theme-sub)',
+              }}
               title={tab.label}
             >
               <Icon className="h-5 w-5" />
               {isActive && (
-                <div className="absolute left-0 h-6 w-1 rounded-r-full bg-gradient-to-b from-blue-500 to-orange-500" />
+                <div 
+                  className="absolute left-0 h-6 w-1 rounded-r-full"
+                  style={{ backgroundColor: 'var(--theme-accent)' }}
+                />
               )}
             </button>
           )
@@ -66,12 +80,11 @@ export function Sidebar({
           <button
             onClick={onCalibrate}
             disabled={!isConnected}
-            className={cn(
-              'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
-              isConnected
-                ? 'text-white/50 hover:bg-white/5 hover:text-white/80'
-                : 'cursor-not-allowed text-white/20',
-            )}
+            className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
+            style={{
+              color: isConnected ? 'var(--theme-sub)' : 'var(--theme-subAlt)',
+              cursor: isConnected ? 'pointer' : 'not-allowed',
+            }}
             title={isConnected ? 'Calibration' : 'Connect cube first'}
           >
             <Settings2 className="h-4 w-4" />
@@ -80,7 +93,8 @@ export function Sidebar({
         {isConnected && onResetGyro && (
           <button
             onClick={onResetGyro}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
+            className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--theme-sub)' }}
             title="Reset Gyro"
           >
             <RefreshCw className="h-4 w-4" />
@@ -95,8 +109,12 @@ export function Sidebar({
               ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
               : isConnecting
                 ? 'animate-pulse bg-blue-500/20 text-blue-400'
-                : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80',
+                : '',
           )}
+          style={!isConnected && !isConnecting ? { 
+            backgroundColor: 'var(--theme-subAlt)', 
+            color: 'var(--theme-sub)' 
+          } : undefined}
           title={isConnected ? 'Disconnect Cube' : isConnecting ? 'Connecting...' : 'Connect Cube'}
         >
           <Bluetooth className="h-4 w-4" />

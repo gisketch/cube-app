@@ -1,0 +1,67 @@
+import { useState, useEffect, useCallback } from 'react'
+import { applyTheme, type CubeTheme } from '@/lib/themes'
+
+export interface AppSettings {
+  animationSpeed: number
+  gyroEnabled: boolean
+  theme: string
+  cubeTheme: CubeTheme
+}
+
+const STORAGE_KEY = 'cube-settings'
+
+const DEFAULT_SETTINGS: AppSettings = {
+  animationSpeed: 15,
+  gyroEnabled: true,
+  theme: 'dark',
+  cubeTheme: 'current',
+}
+
+function loadSettings(): AppSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const settings = { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
+      applyTheme(settings.theme)
+      return settings
+    }
+  } catch (e) {
+    console.error('Failed to load settings:', e)
+  }
+  applyTheme(DEFAULT_SETTINGS.theme)
+  return DEFAULT_SETTINGS
+}
+
+function saveSettings(settings: AppSettings) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+  } catch (e) {
+    console.error('Failed to save settings:', e)
+  }
+}
+
+export function useSettings() {
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings())
+
+  useEffect(() => {
+    saveSettings(settings)
+  }, [settings])
+
+  useEffect(() => {
+    applyTheme(settings.theme)
+  }, [settings.theme])
+
+  const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    setSettings((prev) => ({ ...prev, [key]: value }))
+  }, [])
+
+  const resetSettings = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS)
+  }, [])
+
+  return {
+    settings,
+    updateSetting,
+    resetSettings,
+  }
+}

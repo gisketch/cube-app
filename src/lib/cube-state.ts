@@ -5,13 +5,33 @@ import type { KPuzzle, KTransformation, KPattern } from 'cubing/kpuzzle'
 
 export type FaceletColor = 'U' | 'D' | 'F' | 'B' | 'L' | 'R'
 
-export const COLOR_MAP: Record<FaceletColor, string> = {
-  U: '#ffffff', // White (top)
-  D: '#ffd500', // Yellow (bottom)
-  F: '#009b48', // Green (front)
-  B: '#0045ad', // Blue (back)
-  R: '#b90000', // Red (right)
-  L: '#ff5900', // Orange (left)
+export const DEFAULT_COLOR_MAP: Record<FaceletColor, string> = {
+  U: '#ffffff',
+  D: '#ffd500',
+  F: '#009b48',
+  B: '#0045ad',
+  R: '#b90000',
+  L: '#ff5900',
+}
+
+export let COLOR_MAP: Record<FaceletColor, string> = { ...DEFAULT_COLOR_MAP }
+
+export function setCubeColors(colors: {
+  cubeWhite: string
+  cubeYellow: string
+  cubeGreen: string
+  cubeBlue: string
+  cubeRed: string
+  cubeOrange: string
+}): void {
+  COLOR_MAP = {
+    U: colors.cubeWhite,
+    D: colors.cubeYellow,
+    F: colors.cubeGreen,
+    B: colors.cubeBlue,
+    R: colors.cubeRed,
+    L: colors.cubeOrange,
+  }
 }
 
 export const FACE_NAMES = ['U', 'L', 'F', 'R', 'B', 'D'] as const

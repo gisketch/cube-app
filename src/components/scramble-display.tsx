@@ -21,16 +21,16 @@ function MoveNotation({
   isFirst: boolean
   wasModified?: boolean
 }) {
-  const colorClass = wasModified
-    ? 'text-yellow-400'
-    : status === 'completed'
-      ? 'text-green-400'
-      : status === 'recovery'
-        ? 'text-red-400'
-        : 'text-white'
+  const getColor = () => {
+    if (wasModified) return 'text-yellow-400'
+    if (status === 'completed') return 'text-green-400'
+    if (status === 'recovery') return 'text-red-400'
+    return ''
+  }
 
   const opacity = status === 'pending' ? 0.4 : status === 'completed' ? 0.6 : 1
   const scale = status === 'current' ? 1.3 : status === 'completed' ? 1.1 : 1
+  const colorClass = getColor()
 
   return (
     <motion.span
@@ -41,6 +41,7 @@ function MoveNotation({
       className={`inline-block font-mono ${colorClass} ${
         status === 'current' ? 'font-bold' : status === 'pending' ? 'font-normal' : 'font-medium'
       }`}
+      style={!colorClass ? { color: 'var(--theme-text)' } : undefined}
     >
       {move}
     </motion.span>
@@ -79,7 +80,10 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-center gap-3">
-        <span className="text-xs font-medium uppercase tracking-wider text-white/40">
+        <span 
+          className="text-xs font-medium uppercase tracking-wider"
+          style={{ color: 'var(--theme-sub)' }}
+        >
           {status === 'idle'
             ? 'Ready'
             : status === 'scrambling'
@@ -91,7 +95,8 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
         <button
           onClick={onNewScramble}
           disabled={isLoading}
-          className="rounded-md p-1.5 text-white/40 transition-colors hover:bg-white/5 hover:text-white/60 disabled:opacity-50"
+          className="rounded-md p-1.5 transition-colors disabled:opacity-50"
+          style={{ color: 'var(--theme-sub)' }}
           title="New Scramble"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -102,7 +107,8 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-sm text-white/50"
+          className="text-sm"
+          style={{ color: 'var(--theme-sub)' }}
         >
           Cube is solved. Generate a scramble to begin.
         </motion.div>
@@ -139,7 +145,8 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
-              className="font-mono text-white/50"
+              className="font-mono"
+              style={{ color: 'var(--theme-sub)' }}
             >
               Press refresh to generate a scramble
             </motion.span>

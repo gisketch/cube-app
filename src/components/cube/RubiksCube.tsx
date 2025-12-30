@@ -13,7 +13,19 @@ const BASE_OFFSET = 1 + BASE_GAP
 const CUBE_SIZE = BASE_CUBE_SIZE
 const OFFSET = BASE_OFFSET
 
-const COLORS = {
+export interface CubeColors {
+  white: string
+  yellow: string
+  red: string
+  orange: string
+  blue: string
+  green: string
+  inner: string
+}
+
+const INNER_COLOR = '#0a0a0a'
+
+const DEFAULT_CUBE_COLORS: CubeColors = {
   white: '#ffffff',
   yellow: '#ffd500',
   red: '#b90000',
@@ -229,7 +241,7 @@ function Cubie({ position, colors, pieceType, coords, materialConfig }: CubiePro
           }
         >
           <mesh geometry={centerBodyGeometry!}>
-            <meshStandardMaterial color={COLORS.inner} roughness={inner.roughness} metalness={inner.metalness} />
+            <meshStandardMaterial color={INNER_COLOR} roughness={inner.roughness} metalness={inner.metalness} />
           </mesh>
         </group>
       ) : (
@@ -238,7 +250,7 @@ function Cubie({ position, colors, pieceType, coords, materialConfig }: CubiePro
           radius={0.08}
           smoothness={4}
         >
-          <meshStandardMaterial color={COLORS.inner} roughness={inner.roughness} metalness={inner.metalness} />
+          <meshStandardMaterial color={INNER_COLOR} roughness={inner.roughness} metalness={inner.metalness} />
         </RoundedBox>
       )}
 
@@ -313,14 +325,14 @@ function getPieceType(x: number, y: number, z: number): PieceType {
   return 'center'
 }
 
-function getDefaultColors(x: number, y: number, z: number): CubieProps['colors'] {
+function getDefaultColors(x: number, y: number, z: number, cubeColors: CubeColors): CubieProps['colors'] {
   const colors: CubieProps['colors'] = {}
-  if (y === 1) colors.top = COLORS.white
-  if (y === -1) colors.bottom = COLORS.yellow
-  if (z === 1) colors.front = COLORS.green
-  if (z === -1) colors.back = COLORS.blue
-  if (x === 1) colors.right = COLORS.red
-  if (x === -1) colors.left = COLORS.orange
+  if (y === 1) colors.top = cubeColors.white
+  if (y === -1) colors.bottom = cubeColors.yellow
+  if (z === 1) colors.front = cubeColors.green
+  if (z === -1) colors.back = cubeColors.blue
+  if (x === 1) colors.right = cubeColors.red
+  if (x === -1) colors.left = cubeColors.orange
   return colors
 }
 
@@ -387,6 +399,7 @@ function getColorsFromPattern(
 
 export interface RubiksCubeRef {
   performMove: (move: string) => void
+  reset: () => void
 }
 
 interface RubiksCubeProps {
@@ -394,10 +407,12 @@ interface RubiksCubeProps {
   pattern?: KPattern | null
   facelets?: string
   materialConfig?: SceneConfig['material']
+  animationSpeed?: number
+  cubeColors?: CubeColors
 }
 
 export const RubiksCube = memo(
-  forwardRef<RubiksCubeRef, RubiksCubeProps>(({ quaternionRef, pattern, facelets: faceletsProp, materialConfig }, ref) => {
+  forwardRef<RubiksCubeRef, RubiksCubeProps>(({ quaternionRef, pattern, facelets: faceletsProp, materialConfig, animationSpeed = 15, cubeColors = DEFAULT_CUBE_COLORS }, ref) => {
     const config = materialConfig ?? DEFAULT_CONFIG.material
     const groupRef = useRef<THREE.Group>(null)
     const animationQueue = useRef<{ axis: 'x' | 'y' | 'z'; layer: number; angle: number }[]>([])
@@ -449,6 +464,28 @@ export const RubiksCube = memo(
           animationQueue.current.push(moveMap[cleanMove])
         }
       },
+      reset: () => {
+        animationQueue.current = []
+        currentAnimation.current = null
+        
+        if (groupRef.current) {
+          let idx = 0
+          for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+              for (let z = -1; z <= 1; z++) {
+                if (x === 0 && y === 0 && z === 0) continue
+                const child = groupRef.current.children[idx]
+                if (child) {
+                  child.position.set(x * OFFSET, y * OFFSET, z * OFFSET)
+                  child.quaternion.identity()
+                  child.updateMatrix()
+                }
+                idx++
+              }
+            }
+          }
+        }
+      },
     }))
 
     useFrame((_, delta) => {
@@ -478,7 +515,7 @@ export const RubiksCube = memo(
 
       if (currentAnimation.current) {
         const anim = currentAnimation.current
-        const speed = 15
+        const speed = animationSpeed
         const step = anim.targetAngle > 0 ? speed * delta : -speed * delta
 
         let finished = false
@@ -545,7 +582,7 @@ export const RubiksCube = memo(
 
             const colors = facelets
               ? getColorsFromPattern(x, y, z, facelets)
-              : getDefaultColors(x, y, z)
+              : getDefaultColors(x, y, z, cubeColors)
 
             result.push({
               key: `${x},${y},${z}`,
@@ -559,7 +596,7 @@ export const RubiksCube = memo(
       }
 
       return result
-    }, [facelets])
+    }, [facelets, cubeColors])
 
     return (
       <group ref={groupRef}>

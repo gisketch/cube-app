@@ -40,19 +40,27 @@ export function CalibrationModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-zinc-900/95 p-6 shadow-2xl"
+            className="relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
+            style={{ 
+              backgroundColor: 'var(--theme-bgSecondary)',
+              border: '1px solid var(--theme-subAlt)'
+            }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Cube Calibration</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>Cube Calibration</h2>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-1.5 transition-colors"
+                style={{ color: 'var(--theme-sub)' }}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mb-6 aspect-square w-full overflow-hidden rounded-xl bg-black/50">
+            <div 
+              className="mb-6 aspect-square w-full overflow-hidden rounded-xl"
+              style={{ backgroundColor: 'var(--theme-bg)' }}
+            >
               <CubeViewer pattern={pattern} quaternionRef={quaternionRef} cubeRef={cubeRef} />
             </div>
 
@@ -60,26 +68,34 @@ export function CalibrationModal({
               <button
                 onClick={onSyncCube}
                 disabled={!isConnected}
-                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-medium text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ 
+                  backgroundColor: 'var(--theme-accent)',
+                  color: 'var(--theme-bg)'
+                }}
               >
                 <RefreshCw className="h-5 w-5" />
                 <span>Sync Cube</span>
               </button>
-              <p className="text-center text-xs text-white/40">
+              <p className="text-center text-xs" style={{ color: 'var(--theme-sub)' }}>
                 Make sure the physical cube is solved, then press to sync the virtual cube
               </p>
 
-              <div className="my-2 h-px bg-white/10" />
+              <div className="my-2 h-px" style={{ backgroundColor: 'var(--theme-subAlt)' }} />
 
               <button
                 onClick={onRecalibrateGyro}
                 disabled={!isConnected}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 font-medium text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ 
+                  backgroundColor: 'var(--theme-subAlt)',
+                  color: 'var(--theme-text)'
+                }}
               >
                 <RotateCcw className="h-5 w-5" />
                 <span>Recalibrate Gyro</span>
               </button>
-              <p className="text-center text-xs text-white/40">
+              <p className="text-center text-xs" style={{ color: 'var(--theme-sub)' }}>
                 Hold the cube with white on top and green facing you, then press to reset gyro
               </p>
             </div>

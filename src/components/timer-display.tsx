@@ -36,7 +36,7 @@ export function TimerDisplay({ time, status, visible }: TimerDisplayProps) {
         ? 'text-blue-400'
         : status === 'inspection'
           ? 'text-yellow-400'
-          : 'text-white'
+          : ''
 
   return (
     <AnimatePresence>
@@ -48,10 +48,13 @@ export function TimerDisplay({ time, status, visible }: TimerDisplayProps) {
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center"
         >
-          <div className={`font-mono text-6xl font-light tracking-tight transition-colors ${colorClass}`}>
+          <div 
+            className={`font-mono text-6xl font-light tracking-tight transition-colors ${colorClass}`}
+            style={status === 'idle' ? { color: 'var(--theme-text)' } : undefined}
+          >
             {formatTime(time)}
           </div>
-          <div className="mt-2 text-sm text-white/40">{statusText}</div>
+          <div className="mt-2 text-sm" style={{ color: 'var(--theme-sub)' }}>{statusText}</div>
         </motion.div>
       )}
     </AnimatePresence>
