@@ -392,11 +392,12 @@ export interface RubiksCubeRef {
 interface RubiksCubeProps {
   quaternionRef?: React.MutableRefObject<THREE.Quaternion>
   pattern?: KPattern | null
+  facelets?: string
   materialConfig?: SceneConfig['material']
 }
 
 export const RubiksCube = memo(
-  forwardRef<RubiksCubeRef, RubiksCubeProps>(({ quaternionRef, pattern, materialConfig }, ref) => {
+  forwardRef<RubiksCubeRef, RubiksCubeProps>(({ quaternionRef, pattern, facelets: faceletsProp, materialConfig }, ref) => {
     const config = materialConfig ?? DEFAULT_CONFIG.material
     const groupRef = useRef<THREE.Group>(null)
     const animationQueue = useRef<{ axis: 'x' | 'y' | 'z'; layer: number; angle: number }[]>([])
@@ -519,11 +520,14 @@ export const RubiksCube = memo(
     })
 
     const facelets = useMemo(() => {
+      if (faceletsProp) {
+        return patternToFacelets(null as unknown as KPattern, faceletsProp)
+      }
       if (pattern) {
         return patternToFacelets(pattern)
       }
       return null
-    }, [pattern])
+    }, [pattern, faceletsProp])
 
     const cubies = useMemo(() => {
       const result: {

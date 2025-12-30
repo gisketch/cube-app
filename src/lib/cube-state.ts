@@ -212,7 +212,7 @@ export function faceletsStringToRecord(facelets: string): Record<FaceName, Facel
   }
 }
 
-export function patternToFacelets(pattern: KPattern, facelets?: string): Record<FaceName, FaceletColor[]> {
+export function patternToFacelets(_pattern: KPattern, facelets?: string): Record<FaceName, FaceletColor[]> {
   if (facelets) {
     return faceletsStringToRecord(facelets)
   }

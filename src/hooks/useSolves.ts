@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { type CFOPAnalysis } from '@/lib/cfop-analyzer'
 
 export interface Solve {
   id: string
@@ -8,6 +9,7 @@ export interface Solve {
   date: string
   dnf?: boolean
   plusTwo?: boolean
+  cfopAnalysis?: CFOPAnalysis
 }
 
 const STORAGE_KEY = 'cube-solves'

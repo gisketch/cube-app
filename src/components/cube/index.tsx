@@ -21,12 +21,13 @@ function CameraController({ config }: { config: SceneConfig }) {
 
 interface CubeViewerProps {
   pattern?: KPattern | null
+  facelets?: string
   quaternionRef?: React.MutableRefObject<THREE.Quaternion>
   cubeRef?: React.RefObject<RubiksCubeRef | null>
   config?: SceneConfig
 }
 
-export function CubeViewer({ pattern, quaternionRef, cubeRef, config = DEFAULT_CONFIG }: CubeViewerProps) {
+export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config = DEFAULT_CONFIG }: CubeViewerProps) {
   const internalRef = useRef<RubiksCubeRef>(null)
   const ref = cubeRef || internalRef
 
@@ -44,7 +45,7 @@ export function CubeViewer({ pattern, quaternionRef, cubeRef, config = DEFAULT_C
           intensity={config.light.directional2.intensity}
         />
         <group scale={config.cube.scale}>
-          <RubiksCube ref={ref} quaternionRef={quaternionRef} pattern={pattern} materialConfig={config.material} />
+          <RubiksCube ref={ref} quaternionRef={quaternionRef} pattern={pattern} facelets={facelets} materialConfig={config.material} />
         </group>
         <OrbitControls
           enablePan={false}

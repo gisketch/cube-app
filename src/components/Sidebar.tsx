@@ -1,7 +1,7 @@
-import { Timer, ListOrdered, Bluetooth, RefreshCw, Settings2 } from 'lucide-react'
+import { Timer, ListOrdered, Bluetooth, RefreshCw, Settings2, FlaskConical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'timer' | 'solves'
+type TabType = 'timer' | 'solves' | 'simulator'
 
 interface SidebarProps {
   activeTab: TabType
@@ -27,6 +27,7 @@ export function Sidebar({
   const tabs = [
     { id: 'timer' as const, label: 'Timer', icon: Timer },
     { id: 'solves' as const, label: 'Solves', icon: ListOrdered },
+    { id: 'simulator' as const, label: 'Simulator', icon: FlaskConical },
   ]
 
   return (

@@ -37,14 +37,6 @@ function rotateFaceCW(face: Color[]): Color[] {
   ]
 }
 
-function rotateFaceCCW(face: Color[]): Color[] {
-  return [
-    face[2], face[5], face[8],
-    face[1], face[4], face[7],
-    face[0], face[3], face[6],
-  ]
-}
-
 export function applyMove(cube: CubeFaces, move: string): CubeFaces {
   const result: CubeFaces = {
     U: [...cube.U],
@@ -137,4 +129,18 @@ export function isSolved(cube: CubeFaces): boolean {
   const checkFace = (face: Color[]): boolean => face.every(c => c === face[4])
   return checkFace(cube.U) && checkFace(cube.D) && checkFace(cube.F) && 
          checkFace(cube.B) && checkFace(cube.L) && checkFace(cube.R)
+}
+
+const COLOR_TO_FACELET: Record<Color, string> = {
+  W: 'U', Y: 'D', G: 'F', B: 'B', R: 'R', O: 'L'
+}
+
+export function cubeFacesToFacelets(cube: CubeFaces): string {
+  const u = cube.U.map(c => COLOR_TO_FACELET[c]).join('')
+  const r = cube.R.map(c => COLOR_TO_FACELET[c]).join('')
+  const f = cube.F.map(c => COLOR_TO_FACELET[c]).join('')
+  const d = cube.D.map(c => COLOR_TO_FACELET[c]).join('')
+  const l = cube.L.map(c => COLOR_TO_FACELET[c]).join('')
+  const b = cube.B.map(c => COLOR_TO_FACELET[c]).join('')
+  return u + r + f + d + l + b
 }
