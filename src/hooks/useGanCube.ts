@@ -18,13 +18,13 @@ export function useGanCube(onMove?: (move: string) => void) {
     error: null,
     deviceName: null,
     isMacAddressRequired: false,
-    debugLog: []
+    debugLog: [],
   })
 
   const addLog = useCallback((msg: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      debugLog: [msg, ...prev.debugLog].slice(0, 20)
+      debugLog: [msg, ...prev.debugLog].slice(0, 20),
     }))
   }, [])
 
@@ -32,7 +32,7 @@ export function useGanCube(onMove?: (move: string) => void) {
   const gyroOffsetRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
   const rawQuaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
   const resolveMacPromiseRef = useRef<((mac: string | null) => void) | null>(null)
-  
+
   // Refs for exposing data without re-renders
   const quaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
   const onMoveRef = useRef(onMove)
@@ -41,44 +41,43 @@ export function useGanCube(onMove?: (move: string) => void) {
     onMoveRef.current = onMove
   }, [onMove])
 
-  const handleEvent = useCallback((event: GanCubeEvent) => {
-    if (event.type === 'GYRO') {
-      const { x, y, z, w } = event.quaternion
-      
-      // Map GAN coordinate system to Three.js
-      // GAN: X=Red(Right), Y=Blue(Back), Z=White(Top)
-      // Three: X=Right, Y=Top, Z=Front
-      
-      // Mapping:
-      // Three X = GAN X
-      // Three Y = GAN Z
-      // Three Z = -GAN Y
-      
-      const rawQuat = new THREE.Quaternion(x, z, -y, w)
-      rawQuaternionRef.current.copy(rawQuat)
-      
-      // Apply offset: displayed = offset * raw
-      const correctedQuat = gyroOffsetRef.current.clone().multiply(rawQuat)
-      
-      // Update ref directly, no state update
-      quaternionRef.current.copy(correctedQuat)
-      
-    } else if (event.type === 'MOVE') {
-      const msg = `MOVE: ${event.move} (face: ${event.face}, dir: ${event.direction})`
-      console.log(msg)
-      addLog(msg)
-      onMoveRef.current?.(event.move)
-    } else if (event.type === 'DISCONNECT') {
-      addLog('Disconnected')
-      setState((prev) => ({ ...prev, isConnected: false }))
-      connectionRef.current = null
-    } else {
-      // Log other events like FACELETS, BATTERY etc
-      if (event.type !== 'GYRO') {
+  const handleEvent = useCallback(
+    (event: GanCubeEvent) => {
+      if (event.type === 'GYRO') {
+        const { x, y, z, w } = event.quaternion
+
+        // Map GAN coordinate system to Three.js
+        // GAN: X=Red(Right), Y=Blue(Back), Z=White(Top)
+        // Three: X=Right, Y=Top, Z=Front
+
+        // Mapping:
+        // Three X = GAN X
+        // Three Y = GAN Z
+        // Three Z = -GAN Y
+
+        const rawQuat = new THREE.Quaternion(x, z, -y, w)
+        rawQuaternionRef.current.copy(rawQuat)
+
+        // Apply offset: displayed = offset * raw
+        const correctedQuat = gyroOffsetRef.current.clone().multiply(rawQuat)
+
+        // Update ref directly, no state update
+        quaternionRef.current.copy(correctedQuat)
+      } else if (event.type === 'MOVE') {
+        const msg = `MOVE: ${event.move} (face: ${event.face}, dir: ${event.direction})`
+        console.log(msg)
+        addLog(msg)
+        onMoveRef.current?.(event.move)
+      } else if (event.type === 'DISCONNECT') {
+        addLog('Disconnected')
+        setState((prev) => ({ ...prev, isConnected: false }))
+        connectionRef.current = null
+      } else {
         addLog(`Event: ${event.type}`)
       }
-    }
-  }, [addLog])
+    },
+    [addLog],
+  )
 
   const connect = useCallback(async () => {
     if (state.isConnected || state.isConnecting) return
@@ -90,10 +89,10 @@ export function useGanCube(onMove?: (move: string) => void) {
       const conn = await connectGanCube(async (_device: any, isFallbackCall?: boolean) => {
         if (isFallbackCall) {
           addLog('MAC Address required')
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             isMacAddressRequired: true,
-            error: "Unable to determine cube MAC address automatically. Please enter it manually."
+            error: 'Unable to determine cube MAC address automatically. Please enter it manually.',
           }))
           return new Promise<string | null>((resolve) => {
             resolveMacPromiseRef.current = resolve
@@ -102,35 +101,35 @@ export function useGanCube(onMove?: (move: string) => void) {
         return null
       })
       connectionRef.current = conn
-      
+
       conn.events$.subscribe(handleEvent)
-      
+
       // Request initial state
       try {
-        await conn.sendCubeCommand({ type: "REQUEST_FACELETS" })
-        await conn.sendCubeCommand({ type: "REQUEST_BATTERY" })
+        await conn.sendCubeCommand({ type: 'REQUEST_FACELETS' })
+        await conn.sendCubeCommand({ type: 'REQUEST_BATTERY' })
       } catch (e) {
         console.warn('Failed to send initial commands', e)
       }
 
       addLog('Connected successfully')
-      
-      setState((prev) => ({ 
-        ...prev, 
-        isConnected: true, 
+
+      setState((prev) => ({
+        ...prev,
+        isConnected: true,
         isConnecting: false,
-        deviceName: 'GAN Cube', 
+        deviceName: 'GAN Cube',
         error: null,
-        isMacAddressRequired: false
+        isMacAddressRequired: false,
       }))
     } catch (error: any) {
       console.error('Failed to connect to GAN cube:', error)
       addLog(`Connection failed: ${error.message}`)
-      setState((prev) => ({ 
-        ...prev, 
+      setState((prev) => ({
+        ...prev,
         isConnecting: false,
         error: error.message || 'Failed to connect to cube',
-        isMacAddressRequired: false
+        isMacAddressRequired: false,
       }))
     }
   }, [state.isConnected, state.isConnecting, handleEvent, addLog])
@@ -139,7 +138,7 @@ export function useGanCube(onMove?: (move: string) => void) {
     if (resolveMacPromiseRef.current) {
       resolveMacPromiseRef.current(mac)
       resolveMacPromiseRef.current = null
-      setState(prev => ({ ...prev, isMacAddressRequired: false, error: null }))
+      setState((prev) => ({ ...prev, isMacAddressRequired: false, error: null }))
     }
   }, [])
 
@@ -147,7 +146,12 @@ export function useGanCube(onMove?: (move: string) => void) {
     if (connectionRef.current) {
       connectionRef.current.disconnect()
       connectionRef.current = null
-      setState((prev) => ({ ...prev, isConnected: false, deviceName: null, isMacAddressRequired: false }))
+      setState((prev) => ({
+        ...prev,
+        isConnected: false,
+        deviceName: null,
+        isMacAddressRequired: false,
+      }))
     }
   }, [])
 
@@ -160,10 +164,14 @@ export function useGanCube(onMove?: (move: string) => void) {
   }, [])
 
   const resetGyro = useCallback(() => {
-    // Set offset such that current raw becomes identity
-    // Identity = offset * raw
+    // Set offset such that current raw becomes the identity orientation
+    // The user should hold the cube with white on top and green facing front
+    // This means current raw should map to identity (no rotation)
     // offset = raw.inverse()
     gyroOffsetRef.current.copy(rawQuaternionRef.current).invert()
+    
+    // Reset the displayed quaternion to identity immediately
+    quaternionRef.current.set(0, 0, 0, 1)
   }, [])
 
   return {

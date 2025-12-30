@@ -11,17 +11,24 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function getPreferredTheme(): Theme {
-  if (typeof window === 'undefined') return 'light'
+function getPreferredTheme(defaultTheme?: Theme): Theme {
+  if (typeof window === 'undefined') return defaultTheme || 'light'
 
   const stored = window.localStorage.getItem('theme')
   if (stored === 'light' || stored === 'dark') return stored
 
+  if (defaultTheme) return defaultTheme
+
   return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : 'light'
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => getPreferredTheme())
+interface ThemeProviderProps {
+  children: React.ReactNode
+  defaultTheme?: Theme
+}
+
+export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(() => getPreferredTheme(defaultTheme))
 
   useEffect(() => {
     const root = document.documentElement
