@@ -42,7 +42,7 @@ export function CubeInfoModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border p-6 shadow-xl"
+            className="fixed inset-0 z-50 border p-6 shadow-xl md:inset-auto md:left-1/2 md:top-1/2 md:max-w-sm md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl"
             style={{
               backgroundColor: 'var(--theme-bg)',
               borderColor: 'var(--theme-subAlt)',

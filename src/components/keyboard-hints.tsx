@@ -14,6 +14,10 @@ export function KeyboardHints({ isConnected }: { isConnected: boolean }) {
             <Kbd>F4</Kbd>
             <span>- sync cube</span>
           </div>
+          <div className="flex items-center gap-2">
+            <Kbd>D4</Kbd>
+            <span>- next scramble</span>
+          </div>
         </>
       ) : (
         <div className="flex items-center gap-2">

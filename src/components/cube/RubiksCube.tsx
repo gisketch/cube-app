@@ -413,6 +413,7 @@ function getColorsFromPattern(
 export interface RubiksCubeRef {
   performMove: (move: string) => void
   reset: () => void
+  applyMoveInstantly: (move: string) => void
 }
 
 interface RubiksCubeProps {
@@ -509,6 +510,69 @@ export const RubiksCube = memo(
               }
             }
           }
+        },
+        applyMoveInstantly: (move: string) => {
+          if (!groupRef.current) return
+          const cleanMove = move.trim()
+          const moveMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; angle: number }> = {
+            U: { axis: 'y', layer: 1, angle: -Math.PI / 2 },
+            "U'": { axis: 'y', layer: 1, angle: Math.PI / 2 },
+            U2: { axis: 'y', layer: 1, angle: -Math.PI },
+            "U2'": { axis: 'y', layer: 1, angle: Math.PI },
+            D: { axis: 'y', layer: -1, angle: Math.PI / 2 },
+            "D'": { axis: 'y', layer: -1, angle: -Math.PI / 2 },
+            D2: { axis: 'y', layer: -1, angle: Math.PI },
+            "D2'": { axis: 'y', layer: -1, angle: -Math.PI },
+            L: { axis: 'x', layer: -1, angle: Math.PI / 2 },
+            "L'": { axis: 'x', layer: -1, angle: -Math.PI / 2 },
+            L2: { axis: 'x', layer: -1, angle: Math.PI },
+            "L2'": { axis: 'x', layer: -1, angle: -Math.PI },
+            R: { axis: 'x', layer: 1, angle: -Math.PI / 2 },
+            "R'": { axis: 'x', layer: 1, angle: Math.PI / 2 },
+            R2: { axis: 'x', layer: 1, angle: -Math.PI },
+            "R2'": { axis: 'x', layer: 1, angle: Math.PI },
+            F: { axis: 'z', layer: 1, angle: -Math.PI / 2 },
+            "F'": { axis: 'z', layer: 1, angle: Math.PI / 2 },
+            F2: { axis: 'z', layer: 1, angle: -Math.PI },
+            "F2'": { axis: 'z', layer: 1, angle: Math.PI },
+            B: { axis: 'z', layer: -1, angle: Math.PI / 2 },
+            "B'": { axis: 'z', layer: -1, angle: -Math.PI / 2 },
+            B2: { axis: 'z', layer: -1, angle: Math.PI },
+            "B2'": { axis: 'z', layer: -1, angle: -Math.PI },
+          }
+
+          const moveData = moveMap[cleanMove]
+          if (!moveData) return
+
+          const targetCubies: THREE.Object3D[] = []
+          groupRef.current.children.forEach((child) => {
+            const x = child.position.x / OFFSET
+            const y = child.position.y / OFFSET
+            const z = child.position.z / OFFSET
+
+            if (moveData.axis === 'x' && Math.abs(x - moveData.layer) < 0.1)
+              targetCubies.push(child)
+            if (moveData.axis === 'y' && Math.abs(y - moveData.layer) < 0.1)
+              targetCubies.push(child)
+            if (moveData.axis === 'z' && Math.abs(z - moveData.layer) < 0.1)
+              targetCubies.push(child)
+          })
+
+          const axisVector = new THREE.Vector3(
+            moveData.axis === 'x' ? 1 : 0,
+            moveData.axis === 'y' ? 1 : 0,
+            moveData.axis === 'z' ? 1 : 0,
+          )
+          const rotQuat = new THREE.Quaternion().setFromAxisAngle(axisVector, moveData.angle)
+
+          targetCubies.forEach((cubie) => {
+            cubie.position.applyAxisAngle(axisVector, moveData.angle)
+            cubie.quaternion.premultiply(rotQuat)
+            cubie.position.x = Math.round(cubie.position.x / OFFSET) * OFFSET
+            cubie.position.y = Math.round(cubie.position.y / OFFSET) * OFFSET
+            cubie.position.z = Math.round(cubie.position.z / OFFSET) * OFFSET
+            cubie.updateMatrix()
+          })
         },
       }))
 

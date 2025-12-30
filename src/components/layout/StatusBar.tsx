@@ -124,6 +124,7 @@ interface StatusButtonProps {
   onClick?: () => void
   hasDropdown?: boolean
   color?: string
+  compact?: boolean
 }
 
 function StatusButton({
@@ -133,14 +134,15 @@ function StatusButton({
   onClick,
   hasDropdown,
   color,
+  compact,
 }: StatusButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="group flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-all hover:bg-[var(--theme-subAlt)]"
+      className={`group flex items-center gap-1 rounded-md transition-all hover:bg-[var(--theme-subAlt)] ${compact ? 'px-1.5 py-0.5 text-xs md:text-sm' : 'px-2 py-1 text-sm'}`}
       style={{ color: color || 'var(--theme-sub)' }}
     >
-      <Icon className="h-4 w-4 transition-colors group-hover:text-[var(--theme-text)]" />
+      <Icon className={`transition-colors group-hover:text-[var(--theme-text)] ${compact ? 'h-3 w-3 md:h-3.5 md:w-3.5' : 'h-4 w-4'}`} />
       <span className="transition-colors group-hover:text-[var(--theme-text)]">{label}:</span>
       <span className="font-medium transition-colors group-hover:text-[var(--theme-accent)]">
         {value}
@@ -187,8 +189,8 @@ export function StatusBar({
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 py-2">
-      <div className="relative">
+    <div className="flex items-center justify-center gap-1 py-1 md:gap-2 md:py-2">
+      <div className="relative hidden md:block">
         <StatusButton
           icon={Boxes}
           label="method"
@@ -210,6 +212,7 @@ export function StatusBar({
           value={avgValue ? formatTime(avgValue) : '-'}
           onClick={() => setAvgOpen(!avgOpen)}
           hasDropdown
+          compact
         />
         <Dropdown isOpen={avgOpen} onClose={() => setAvgOpen(false)}>
           <DropdownItem onClick={() => handleAvgSelect('ao5')} selected={selectedAvg === 'ao5'}>
@@ -231,8 +234,48 @@ export function StatusBar({
         icon={Trophy}
         label="pb"
         value={averages.best ? formatTime(averages.best) : '-'}
+        compact
       />
 
+      <div className="hidden md:block">
+        {isConnected ? (
+          <StatusButton
+            icon={batteryLevel !== null && batteryLevel <= 20 ? BatteryWarning : Battery}
+            label="battery"
+            value={batteryLevel !== null ? `${batteryLevel}%` : '-'}
+            onClick={onOpenCubeInfo}
+            color={batteryLevel !== null && batteryLevel <= 20 ? 'var(--theme-error)' : undefined}
+          />
+        ) : (
+          <StatusButton
+            icon={Bluetooth}
+            label="cube"
+            value={isConnecting ? 'connecting...' : '(press to connect)'}
+            onClick={onConnect}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface CubeConnectionStatusProps {
+  batteryLevel: number | null
+  isConnected: boolean
+  isConnecting?: boolean
+  onConnect?: () => void
+  onOpenCubeInfo?: () => void
+}
+
+export function CubeConnectionStatus({
+  batteryLevel,
+  isConnected,
+  isConnecting,
+  onConnect,
+  onOpenCubeInfo,
+}: CubeConnectionStatusProps) {
+  return (
+    <div className="flex items-center justify-center py-1 md:hidden">
       {isConnected ? (
         <StatusButton
           icon={batteryLevel !== null && batteryLevel <= 20 ? BatteryWarning : Battery}
@@ -240,13 +283,15 @@ export function StatusBar({
           value={batteryLevel !== null ? `${batteryLevel}%` : '-'}
           onClick={onOpenCubeInfo}
           color={batteryLevel !== null && batteryLevel <= 20 ? 'var(--theme-error)' : undefined}
+          compact
         />
       ) : (
         <StatusButton
           icon={Bluetooth}
           label="cube"
-          value={isConnecting ? 'connecting...' : '(press to connect)'}
+          value={isConnecting ? 'connecting...' : 'tap to connect'}
           onClick={onConnect}
+          compact
         />
       )}
     </div>

@@ -40,7 +40,7 @@ export function CalibrationModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
+            className="relative z-10 h-full w-full p-6 shadow-2xl md:h-auto md:max-w-md md:rounded-2xl"
             style={{
               backgroundColor: 'var(--theme-bgSecondary)',
               border: '1px solid var(--theme-subAlt)',

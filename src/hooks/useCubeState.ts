@@ -6,6 +6,8 @@ import {
   applyAlgorithm,
   generateScramble,
   isCubeSolved,
+  applyMoveToFacelets,
+  SOLVED_FACELETS,
 } from '@/lib/cube-state'
 
 export function useCubeState() {
@@ -13,11 +15,13 @@ export function useCubeState() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentScramble, setCurrentScramble] = useState<string>('')
   const stateRef = useRef<CubeState | null>(null)
+  const faceletsRef = useRef<string>(SOLVED_FACELETS)
 
   useEffect(() => {
     createSolvedState().then((state) => {
       setCubeState(state)
       stateRef.current = state
+      faceletsRef.current = state.facelets
       setIsLoading(false)
     })
   }, [])
@@ -27,23 +31,30 @@ export function useCubeState() {
     return isCubeSolved(cubeState)
   }, [cubeState])
 
-  const performMove = useCallback(async (move: string) => {
-    if (!stateRef.current) return
-    const newState = await applyMove(stateRef.current, move)
-    stateRef.current = newState
-    setCubeState(newState)
+  const performMove = useCallback(async (move: string): Promise<string> => {
+    faceletsRef.current = applyMoveToFacelets(faceletsRef.current, move)
+    
+    if (stateRef.current) {
+      const newState = await applyMove(stateRef.current, move)
+      stateRef.current = newState
+      setCubeState(newState)
+    }
+    
+    return faceletsRef.current
   }, [])
 
   const performAlgorithm = useCallback(async (alg: string) => {
     if (!stateRef.current) return
     const newState = await applyAlgorithm(stateRef.current, alg)
     stateRef.current = newState
+    faceletsRef.current = newState.facelets
     setCubeState(newState)
   }, [])
 
   const reset = useCallback(async () => {
     const state = await createSolvedState()
     stateRef.current = state
+    faceletsRef.current = state.facelets
     setCubeState(state)
     setCurrentScramble('')
   }, [])
@@ -55,10 +66,13 @@ export function useCubeState() {
     if (stateRef.current) {
       const newState = await applyAlgorithm(stateRef.current, scrambleAlg)
       stateRef.current = newState
+      faceletsRef.current = newState.facelets
       setCubeState(newState)
     }
     return scrambleAlg
   }, [reset])
+
+  const getFacelets = useCallback(() => faceletsRef.current, [])
 
   return {
     cubeState,
@@ -69,5 +83,6 @@ export function useCubeState() {
     performAlgorithm,
     reset,
     scramble,
+    getFacelets,
   }
 }

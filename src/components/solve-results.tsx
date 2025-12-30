@@ -37,6 +37,7 @@ interface SolveResultsProps {
   scramble?: string
   showBackButton?: boolean
   solve?: Solve
+  animationSpeed?: number
 }
 
 interface PhaseMarker {
@@ -52,12 +53,12 @@ function StatCard({ label, value }: { label: string; value: string }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-start"
+      className="flex flex-col items-center md:items-start"
     >
-      <span className="text-sm tracking-wide" style={{ color: 'var(--theme-sub)' }}>
+      <span className="text-xs tracking-wide md:text-sm" style={{ color: 'var(--theme-sub)' }}>
         {label}
       </span>
-      <span className="text-3xl font-bold" style={{ color: 'var(--theme-text)' }}>
+      <span className="text-lg font-bold md:text-3xl" style={{ color: 'var(--theme-text)' }}>
         {value}
       </span>
     </motion.div>
@@ -69,42 +70,51 @@ function PhaseStatCard({
   moves,
   duration,
   tps,
+  recognitionRatio = 0.25,
 }: {
   label: string
   moves: number
   duration: number
   tps: number
+  recognitionRatio?: number
 }) {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  const recognitionTime = duration * recognitionRatio
+  const executionTime = duration * (1 - recognitionRatio)
+  const recognitionPercent = Math.round(recognitionRatio * 100)
+  const executionPercent = 100 - recognitionPercent
+
+  const formatMs = (ms: number) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-start"
+      className="flex flex-col items-center md:items-start"
     >
-      <span className="text-sm tracking-wide" style={{ color: 'var(--theme-sub)' }}>
+      <span className="text-xs tracking-wide md:text-sm" style={{ color: 'var(--theme-sub)' }}>
         {label}
       </span>
       {moves > 0 ? (
-        <Tooltip>
+        <Tooltip open={isOpen} onOpenChange={setIsOpen}>
           <TooltipTrigger asChild>
-            <span
-              className="cursor-pointer text-3xl font-bold transition-colors hover:text-[var(--theme-accent)]"
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="cursor-pointer text-lg font-bold transition-colors hover:text-[var(--theme-accent)] md:text-3xl"
               style={{ color: 'var(--theme-text)' }}
             >
               {formatDuration(duration)}
-            </span>
+            </button>
           </TooltipTrigger>
           <TooltipContent
             side="top"
             className="border-[var(--theme-subAlt)] bg-[var(--theme-bgSecondary)]"
           >
-            <div className="flex flex-col gap-1 text-xs">
-              <div className="flex justify-between gap-4">
-                <span style={{ color: 'var(--theme-sub)' }}>TPS</span>
-                <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
-                  {tps.toFixed(2)}
-                </span>
-              </div>
+            <div className="flex flex-col gap-1.5 text-xs">
               <div className="flex justify-between gap-4">
                 <span style={{ color: 'var(--theme-sub)' }}>Moves</span>
                 <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
@@ -112,17 +122,33 @@ function PhaseStatCard({
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                <span style={{ color: 'var(--theme-sub)' }}>Duration</span>
+                <span style={{ color: 'var(--theme-sub)' }}>TPS</span>
                 <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
-                  {formatDuration(duration)}
+                  {tps.toFixed(2)}
+                </span>
+              </div>
+              <div
+                className="my-1 h-px w-full"
+                style={{ backgroundColor: 'var(--theme-subAlt)' }}
+              />
+              <div className="flex justify-between gap-4">
+                <span style={{ color: 'var(--theme-sub)' }}>Recognition</span>
+                <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
+                  {formatMs(recognitionTime)} ({recognitionPercent}%)
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span style={{ color: 'var(--theme-sub)' }}>Execution</span>
+                <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
+                  {formatMs(executionTime)} ({executionPercent}%)
                 </span>
               </div>
             </div>
           </TooltipContent>
         </Tooltip>
       ) : (
-        <span className="text-3xl font-bold" style={{ color: 'var(--theme-text)' }}>
-          {formatDuration(duration)}
+        <span className="text-lg font-bold md:text-3xl" style={{ color: 'var(--theme-sub)' }}>
+          SKIP
         </span>
       )}
     </motion.div>
@@ -148,19 +174,19 @@ function ActionButton({
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex h-12 w-12 items-center justify-center rounded-lg transition-colors"
+      className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors md:h-12 md:w-12"
       style={{
         backgroundColor: active ? 'var(--theme-accent)' : 'var(--theme-subAlt)',
         color: active ? 'var(--theme-bg)' : 'var(--theme-text)',
       }}
       title={label}
     >
-      <Icon className="h-5 w-5" />
+      <Icon className="h-4 w-4 md:h-5 md:w-5" />
     </motion.button>
   )
 }
 
-function CubeNet({ scramble }: { scramble: string }) {
+function CubeNet({ scramble, compact }: { scramble: string; compact?: boolean }) {
   const cubeState = useMemo(() => {
     const moves = scramble
       .trim()
@@ -173,15 +199,17 @@ function CubeNet({ scramble }: { scramble: string }) {
     return cube
   }, [scramble])
 
+  const cellSize = compact ? 'h-6 w-6' : 'h-12 w-12 md:h-12 md:w-12'
+
   return (
     <div
-      className="grid grid-cols-3 gap-1 rounded-lg p-2"
+      className={`grid grid-cols-3 rounded-lg ${compact ? 'gap-0.5 p-1' : 'gap-1 p-2'}`}
       style={{ backgroundColor: 'var(--theme-bgSecondary)' }}
     >
       {cubeState.F.map((color, i) => (
         <div
           key={i}
-          className="h-12 w-12 rounded"
+          className={`${cellSize} rounded`}
           style={{
             backgroundColor: COLOR_HEX[color as keyof typeof COLOR_HEX] || '#888',
           }}
@@ -196,7 +224,7 @@ interface PhaseBarProps {
   moves: number
   recognitionRatio: number
   maxMoves: number
-  totalTime: number
+  duration: number
   phaseColor: string
 }
 
@@ -205,16 +233,15 @@ function VerticalBar({
   moves,
   recognitionRatio,
   maxMoves,
-  totalTime,
+  duration,
   phaseColor,
 }: PhaseBarProps) {
   const barHeight = maxMoves > 0 ? (moves / maxMoves) * 100 : 0
   const recognitionHeight = recognitionRatio * 100
   const executionRatio = 1 - recognitionRatio
 
-  const phaseTime = (moves / maxMoves) * totalTime * 0.25
-  const recognitionTime = phaseTime * recognitionRatio
-  const executionTime = phaseTime * executionRatio
+  const recognitionTime = duration * recognitionRatio
+  const executionTime = duration * executionRatio
 
   const formatMs = (ms: number) => {
     if (ms < 1000) return `${Math.round(ms)}ms`
@@ -291,6 +318,156 @@ function VerticalBar({
   )
 }
 
+function HorizontalBar({
+  label,
+  moves,
+  recognitionRatio,
+  maxMoves,
+  duration,
+  phaseColor,
+}: PhaseBarProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const barWidth = maxMoves > 0 ? (moves / maxMoves) * 100 : 0
+  const executionRatio = 1 - recognitionRatio
+  const recognitionTime = duration * recognitionRatio
+  const executionTime = duration * executionRatio
+
+  const formatMs = (ms: number) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+
+  const tps = duration > 0 ? moves / (duration / 1000) : 0
+
+  const barContent = (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-medium" style={{ color: phaseColor }}>
+          {label}
+        </span>
+        <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>
+          {moves}
+        </span>
+      </div>
+      <div
+        className="h-2 w-full overflow-hidden rounded-full"
+        style={{ backgroundColor: 'var(--theme-subAlt)' }}
+      >
+        <div
+          className="flex h-full overflow-hidden rounded-full"
+          style={{ width: `${Math.max(barWidth, 3)}%` }}
+        >
+          <div
+            style={{
+              width: `${recognitionRatio * 100}%`,
+              backgroundColor: phaseColor,
+              opacity: 0.4,
+            }}
+          />
+          <div
+            className="flex-1"
+            style={{
+              backgroundColor: phaseColor,
+              opacity: 0.9,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  if (moves === 0) {
+    return barContent
+  }
+
+  return (
+    <Tooltip open={isOpen} onOpenChange={setIsOpen}>
+      <TooltipTrigger asChild>
+        <button onClick={() => setIsOpen(!isOpen)} className="w-full text-left">
+          {barContent}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className="border-[var(--theme-subAlt)] bg-[var(--theme-bgSecondary)]"
+      >
+        <div className="flex flex-col gap-1.5 text-xs">
+          <div className="font-medium" style={{ color: phaseColor }}>
+            {label}: {moves} moves
+          </div>
+          <div className="flex justify-between gap-4">
+            <span style={{ color: 'var(--theme-sub)' }}>TPS</span>
+            <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
+              {tps.toFixed(2)}
+            </span>
+          </div>
+          <div
+            className="my-0.5 h-px w-full"
+            style={{ backgroundColor: 'var(--theme-subAlt)' }}
+          />
+          <div className="flex justify-between gap-4">
+            <span style={{ color: 'var(--theme-sub)' }}>Recognition</span>
+            <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
+              {formatMs(recognitionTime)} ({Math.round(recognitionRatio * 100)}%)
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span style={{ color: 'var(--theme-sub)' }}>Execution</span>
+            <span className="font-medium" style={{ color: 'var(--theme-text)' }}>
+              {formatMs(executionTime)} ({Math.round(executionRatio * 100)}%)
+            </span>
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+function MobileCFOPBreakdown({
+  crossMoves,
+  f2lMoves,
+  ollMoves,
+  pllMoves,
+  crossDuration,
+  f2lDuration,
+  ollDuration,
+  pllDuration,
+}: {
+  crossMoves: number
+  f2lMoves: number
+  ollMoves: number
+  pllMoves: number
+  crossDuration: number
+  f2lDuration: number
+  ollDuration: number
+  pllDuration: number
+}) {
+  const maxMoves = Math.max(crossMoves, f2lMoves, ollMoves, pllMoves, 1)
+
+  const phases = [
+    { label: 'Cross', moves: crossMoves, recognitionRatio: 0.15, colorVar: '--theme-phaseCross', duration: crossDuration },
+    { label: 'F2L', moves: f2lMoves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L1', duration: f2lDuration },
+    { label: 'OLL', moves: ollMoves, recognitionRatio: 0.35, colorVar: '--theme-phaseOLL', duration: ollDuration },
+    { label: 'PLL', moves: pllMoves, recognitionRatio: 0.3, colorVar: '--theme-phasePLL', duration: pllDuration },
+  ]
+
+  return (
+    <div className="flex w-full flex-col gap-1.5 md:hidden">
+      {phases.map((phase) => (
+        <HorizontalBar
+          key={phase.label}
+          label={phase.label}
+          moves={phase.moves}
+          recognitionRatio={phase.recognitionRatio}
+          maxMoves={maxMoves}
+          duration={phase.duration}
+          phaseColor={`var(${phase.colorVar})`}
+        />
+      ))}
+    </div>
+  )
+}
+
 function parseAlgorithm(alg: string): string[] {
   return alg
     .trim()
@@ -313,6 +490,7 @@ export function SolveResults({
   scramble,
   showBackButton,
   solve,
+  animationSpeed,
 }: SolveResultsProps) {
   const [isReplayMode, setIsReplayMode] = useState(false)
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
@@ -330,14 +508,13 @@ export function SolveResults({
     }
   }, [hasGyroData])
 
-
-
   const replayCubeRef = useRef<RubiksCubeRef>(null)
   const replayQuaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
   const playbackStartTimeRef = useRef<number>(0)
   const currentMoveIndexRef = useRef<number>(-1)
   const isPlayingRef = useRef<boolean>(false)
   const animationFrameRef = useRef<number | null>(null)
+  const [replayFacelets, setReplayFacelets] = useState<string>('')
 
   const has3DCube = pattern && quaternionRef && cubeRef
 
@@ -356,6 +533,11 @@ export function SolveResults({
   const ollDuration = totalPhaseMoves > 0 ? (ollMoves / totalPhaseMoves) * time : 0
   const pllDuration = totalPhaseMoves > 0 ? (pllMoves / totalPhaseMoves) * time : 0
 
+  const f2l1Duration = f2lMoves > 0 ? (f2l1Moves / f2lMoves) * f2lDuration : 0
+  const f2l2Duration = f2lMoves > 0 ? (f2l2Moves / f2lMoves) * f2lDuration : 0
+  const f2l3Duration = f2lMoves > 0 ? (f2l3Moves / f2lMoves) * f2lDuration : 0
+  const f2l4Duration = f2lMoves > 0 ? (f2l4Moves / f2lMoves) * f2lDuration : 0
+
   const crossTps = crossDuration > 0 ? crossMoves / (crossDuration / 1000) : 0
   const f2lTps = f2lDuration > 0 ? f2lMoves / (f2lDuration / 1000) : 0
   const ollTps = ollDuration > 0 ? ollMoves / (ollDuration / 1000) : 0
@@ -373,13 +555,13 @@ export function SolveResults({
   )
 
   const phases = [
-    { label: 'Cross', moves: crossMoves, recognitionRatio: 0.15, colorVar: '--theme-phaseCross' },
-    { label: 'F2L 1', moves: f2l1Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L1' },
-    { label: 'F2L 2', moves: f2l2Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L2' },
-    { label: 'F2L 3', moves: f2l3Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L3' },
-    { label: 'F2L 4', moves: f2l4Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L4' },
-    { label: 'OLL', moves: ollMoves, recognitionRatio: 0.35, colorVar: '--theme-phaseOLL' },
-    { label: 'PLL', moves: pllMoves, recognitionRatio: 0.3, colorVar: '--theme-phasePLL' },
+    { label: 'Cross', moves: crossMoves, recognitionRatio: 0.15, colorVar: '--theme-phaseCross', duration: crossDuration },
+    { label: 'F2L 1', moves: f2l1Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L1', duration: f2l1Duration },
+    { label: 'F2L 2', moves: f2l2Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L2', duration: f2l2Duration },
+    { label: 'F2L 3', moves: f2l3Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L3', duration: f2l3Duration },
+    { label: 'F2L 4', moves: f2l4Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L4', duration: f2l4Duration },
+    { label: 'OLL', moves: ollMoves, recognitionRatio: 0.35, colorVar: '--theme-phaseOLL', duration: ollDuration },
+    { label: 'PLL', moves: pllMoves, recognitionRatio: 0.3, colorVar: '--theme-phasePLL', duration: pllDuration },
   ]
 
   const { initialScrambledFacelets, replayPhases, allMoves, totalMoves, timeOffset } =
@@ -492,6 +674,22 @@ export function SolveResults({
       }
     }, [solve])
 
+  const computeFaceletsAtIndex = useCallback(
+    (index: number): string => {
+      if (!solve) return ''
+      const scrambleMoves = parseAlgorithm(solve.scramble)
+      let cube = createSolvedCube()
+      for (const move of scrambleMoves) {
+        cube = applyMove(cube, move)
+      }
+      for (let i = 0; i <= index && i < allMoves.length; i++) {
+        cube = applyMove(cube, allMoves[i])
+      }
+      return cubeFacesToFacelets(cube)
+    },
+    [solve, allMoves],
+  )
+
   const [replayKey, setReplayKey] = useState(0)
 
   useEffect(() => {
@@ -568,7 +766,20 @@ export function SolveResults({
           }
         }
 
-        if (targetMoveIdx >= totalMoves - 1) {
+        const solveEndTime = time
+        if (elapsed >= solveEndTime) {
+          setCurrentElapsedTime(solveEndTime + timeOffset)
+          if (targetMoveIdx < totalMoves - 1) {
+            currentMoveIndexRef.current = totalMoves - 1
+            setCurrentMoveIndex(totalMoves - 1)
+            if (replayCubeRef.current) {
+              for (let i = targetMoveIdx + 1; i < totalMoves; i++) {
+                if (i >= 0 && i < allMoves.length) {
+                  replayCubeRef.current.performMove(allMoves[i])
+                }
+              }
+            }
+          }
           setIsPlaying(false)
           return
         }
@@ -621,20 +832,13 @@ export function SolveResults({
       setCurrentMoveIndex(newIndex)
 
       if (newIndex < prevIndex) {
+        const newFacelets = computeFaceletsAtIndex(newIndex)
+        setReplayFacelets(newFacelets)
         setReplayKey((k) => k + 1)
-        setTimeout(() => {
-          if (replayCubeRef.current) {
-            for (let i = 0; i <= newIndex; i++) {
-              if (i >= 0 && i < allMoves.length) {
-                replayCubeRef.current.performMove(allMoves[i])
-              }
-            }
-          }
-        }, 50)
       } else if (newIndex > prevIndex && replayCubeRef.current) {
         for (let i = prevIndex + 1; i <= newIndex; i++) {
           if (i >= 0 && i < allMoves.length) {
-            replayCubeRef.current.performMove(allMoves[i])
+            replayCubeRef.current.applyMoveInstantly(allMoves[i])
           }
         }
       }
@@ -666,24 +870,15 @@ export function SolveResults({
         setCurrentElapsedTime(Math.max(0, estimatedTime))
       }
     },
-    [totalMoves, solve, enableGyro, time, allMoves],
+    [totalMoves, solve, enableGyro, time, allMoves, computeFaceletsAtIndex],
   )
 
-  const togglePlay = () => {
-    if (!isPlaying) {
-      playbackStartTimeRef.current = performance.now()
-    }
-    setIsPlaying(!isPlaying)
-  }
-
-  const stepBack = () => handleSeek(currentMoveIndex - 1)
-  const stepForward = () => handleSeek(currentMoveIndex + 1)
-
-  const resetReplay = () => {
+  const resetReplay = useCallback(() => {
     currentMoveIndexRef.current = -1
     setCurrentMoveIndex(-1)
     setCurrentElapsedTime(0)
     setIsPlaying(false)
+    setReplayFacelets('')
     setReplayKey((k) => k + 1)
     if (solve?.gyroData?.[0]) {
       const firstFrame = solve.gyroData[0]
@@ -694,13 +889,32 @@ export function SolveResults({
         firstFrame.quaternion.w,
       )
     }
+  }, [solve?.gyroData])
+
+  const togglePlay = () => {
+    if (!isPlaying) {
+      if (currentMoveIndex >= totalMoves - 1) {
+        resetReplay()
+        setTimeout(() => {
+          playbackStartTimeRef.current = performance.now()
+          setIsPlaying(true)
+        }, 50)
+        return
+      }
+      playbackStartTimeRef.current = performance.now()
+    }
+    setIsPlaying(!isPlaying)
   }
+
+  const stepBack = () => handleSeek(currentMoveIndex - 1)
+  const stepForward = () => handleSeek(currentMoveIndex + 1)
 
   const enterReplayMode = () => {
     setIsReplayMode(true)
     setCurrentMoveIndex(-1)
     setCurrentElapsedTime(0)
     setIsPlaying(false)
+    setReplayFacelets('')
     setReplayKey((k) => k + 1)
     if (solve?.gyroData?.[0]) {
       const firstFrame = solve.gyroData[0]
@@ -761,55 +975,38 @@ export function SolveResults({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-1 flex-col items-center justify-center gap-3 px-4"
+          className="flex flex-1 flex-col items-center gap-2 px-6 pt-6 md:justify-center md:gap-3 md:px-4 md:pt-4"
         >
-          <div className="flex w-full max-w-4xl items-start justify-center gap-8">
-            <div className="flex flex-col gap-2">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
+          <div className="flex w-full max-w-4xl flex-col items-center justify-center gap-2 md:flex-row md:items-start md:gap-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-center"
+            >
+              <span className="text-xs md:text-base" style={{ color: 'var(--theme-sub)' }}>
+                time
+              </span>
+              <div
+                className="text-4xl font-bold tabular-nums md:text-6xl"
+                style={{ color: 'var(--theme-accent)' }}
               >
-                <span className="text-base" style={{ color: 'var(--theme-sub)' }}>
-                  time
-                </span>
-                <div
-                  className="text-6xl font-bold tabular-nums"
-                  style={{ color: 'var(--theme-accent)' }}
-                >
-                  {formatTime(displayTime)}
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <span className="text-base" style={{ color: 'var(--theme-sub)' }}>
-                  tps
-                </span>
-                <div
-                  className="text-4xl font-bold tabular-nums"
-                  style={{ color: 'var(--theme-text)' }}
-                >
-                  {displayTps}
-                </div>
-              </motion.div>
-            </div>
+                {formatTime(displayTime, time)}
+              </div>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
               className="relative flex items-center justify-center"
-              style={{ minWidth: 224, minHeight: 224 }}
+              style={{ minWidth: 160, minHeight: 160 }}
             >
               {isReplayMode && initialScrambledFacelets ? (
-                <div className="flex h-56 w-56 items-center justify-center">
+                <div className="flex h-40 w-40 items-center justify-center md:h-56 md:w-56">
                   <CubeViewer
                     key={replayKey}
-                    facelets={initialScrambledFacelets}
+                    facelets={replayFacelets || initialScrambledFacelets}
                     quaternionRef={replayQuaternionRef}
                     cubeRef={replayCubeRef}
                     config={{
@@ -820,10 +1017,11 @@ export function SolveResults({
                       },
                     }}
                     animationSpeed={30}
+                    enableZoom={false}
                   />
                 </div>
               ) : has3DCube ? (
-                <div className="flex h-56 w-56 items-center justify-center">
+                <div className="flex h-40 w-40 items-center justify-center md:h-56 md:w-56">
                   <CubeViewer
                     pattern={pattern}
                     quaternionRef={quaternionRef}
@@ -835,11 +1033,14 @@ export function SolveResults({
                         fov: 26,
                       },
                     }}
-                    animationSpeed={200}
+                    animationSpeed={animationSpeed ?? 15}
+                    enableZoom={false}
                   />
                 </div>
               ) : scramble ? (
-                <CubeNet scramble={scramble} />
+                <div className="py-4 md:py-0">
+                  <CubeNet scramble={scramble} compact />
+                </div>
               ) : null}
             </motion.div>
 
@@ -848,7 +1049,7 @@ export function SolveResults({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="flex flex-1 flex-col gap-2"
+                className="hidden flex-1 flex-col gap-2 md:flex"
                 style={{ maxWidth: '400px' }}
               >
                 <div className="mb-1 flex items-center justify-end">
@@ -873,17 +1074,19 @@ export function SolveResults({
                   </div>
                 </div>
                 <div className="mt-4 flex w-full gap-1">
-                  {phases.map((phase) => (
-                    <VerticalBar
-                      key={phase.label}
-                      label={phase.label}
-                      moves={phase.moves}
-                      recognitionRatio={phase.recognitionRatio}
-                      maxMoves={maxMoves}
-                      totalTime={time}
-                      phaseColor={`var(${phase.colorVar})`}
-                    />
-                  ))}
+                  {phases
+                    .filter((phase) => phase.moves > 0)
+                    .map((phase) => (
+                      <VerticalBar
+                        key={phase.label}
+                        label={phase.label}
+                        moves={phase.moves}
+                        recognitionRatio={phase.recognitionRatio}
+                        maxMoves={maxMoves}
+                        duration={phase.duration}
+                        phaseColor={`var(${phase.colorVar})`}
+                      />
+                    ))}
                 </div>
               </motion.div>
             )}
@@ -1035,27 +1238,62 @@ export function SolveResults({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2, delay: 0.4 }}
-                className="flex w-full max-w-4xl items-center justify-between"
+                className="flex w-full max-w-4xl flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0"
               >
-                <StatCard label="moves" value={moves.toString()} />
-                <PhaseStatCard
-                  label="cross"
-                  moves={crossMoves}
-                  duration={crossDuration}
-                  tps={crossTps}
-                />
-                <PhaseStatCard label="f2l" moves={f2lMoves} duration={f2lDuration} tps={f2lTps} />
-                <PhaseStatCard label="oll" moves={ollMoves} duration={ollDuration} tps={ollTps} />
-                <PhaseStatCard label="pll" moves={pllMoves} duration={pllDuration} tps={pllTps} />
+                <div className="flex items-center justify-center gap-6 md:justify-start">
+                  <StatCard label="moves" value={moves.toString()} />
+                  <StatCard label="tps" value={displayTps} />
+                </div>
+                <div className="flex items-center justify-center gap-4 md:justify-end md:gap-6">
+                  <PhaseStatCard
+                    label="cross"
+                    moves={crossMoves}
+                    duration={crossDuration}
+                    tps={crossTps}
+                    recognitionRatio={0.15}
+                  />
+                  <PhaseStatCard
+                    label="f2l"
+                    moves={f2lMoves}
+                    duration={f2lDuration}
+                    tps={f2lTps}
+                    recognitionRatio={0.25}
+                  />
+                  <PhaseStatCard
+                    label="oll"
+                    moves={ollMoves}
+                    duration={ollDuration}
+                    tps={ollTps}
+                    recognitionRatio={0.35}
+                  />
+                  <PhaseStatCard
+                    label="pll"
+                    moves={pllMoves}
+                    duration={pllDuration}
+                    tps={pllTps}
+                    recognitionRatio={0.3}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
+
+          <MobileCFOPBreakdown
+            crossMoves={crossMoves}
+            f2lMoves={f2lMoves}
+            ollMoves={ollMoves}
+            pllMoves={pllMoves}
+            crossDuration={crossDuration}
+            f2lDuration={f2lDuration}
+            ollDuration={ollDuration}
+            pllDuration={pllDuration}
+          />
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 flex items-center gap-4"
+            className="mt-4 flex items-center gap-4 md:mt-8"
           >
             <ActionButton icon={ChevronRight} onClick={onNextScramble} label="Next Scramble" />
             <ActionButton icon={RotateCcw} onClick={onRepeatScramble} label="Repeat Scramble" />

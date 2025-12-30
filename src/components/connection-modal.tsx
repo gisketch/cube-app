@@ -35,7 +35,7 @@ export function ConnectionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
-        className="relative w-full max-w-md rounded-lg p-6 shadow-lg duration-200 animate-in fade-in zoom-in-95"
+        className="relative h-full w-full p-6 shadow-lg duration-200 animate-in fade-in zoom-in-95 md:h-auto md:max-w-md md:rounded-lg"
         style={{
           backgroundColor: 'var(--theme-bgSecondary)',
           border: '1px solid var(--theme-subAlt)',

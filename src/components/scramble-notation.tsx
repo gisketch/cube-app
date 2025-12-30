@@ -69,7 +69,7 @@ function RecoveryMoveNotation({ move }: { move: ParsedMove }) {
 }
 
 export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNotationProps) {
-  const { status, moves, originalScramble, recoveryMoves } = trackerState
+  const { status, moves, originalScramble, recoveryMoves, shouldResetCube } = trackerState
   const isScrambling = status === 'scrambling'
   const isDiverged = status === 'diverged'
   const showScrambleMoves = isScrambling || isDiverged
@@ -78,7 +78,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
   const isStopped = timerStatus === 'stopped'
 
   return (
-    <div className="flex min-h-[80px] flex-col items-center justify-center">
+    <div className="flex min-h-[60px] flex-col items-center justify-center px-4 md:min-h-[80px] md:px-0">
       <AnimatePresence mode="wait">
         {!originalScramble && status === 'idle' && (
           <motion.div
@@ -103,7 +103,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
           >
             <motion.div
               layout
-              className="flex max-w-xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-2xl tracking-wide"
+              className="flex max-w-xl flex-wrap items-center justify-center gap-x-2 gap-y-1 text-base tracking-wide md:gap-x-4 md:gap-y-2 md:text-2xl"
             >
               {moves.map((moveState: ScrambleMoveState, i: number) => (
                 <MoveNotation
@@ -114,7 +114,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
               ))}
             </motion.div>
             <AnimatePresence>
-              {isDiverged && recoveryMoves.length > 0 && (
+              {isDiverged && (
                 <motion.div
                   initial={{ opacity: 0, y: -10, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -122,14 +122,22 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-sm" style={{ color: 'var(--theme-error, #ef4444)' }}>
-                    undo:
-                  </span>
-                  <div className="flex gap-2 text-xl">
-                    {recoveryMoves.map((move, i) => (
-                      <RecoveryMoveNotation key={`recovery-${i}`} move={move} />
-                    ))}
-                  </div>
+                  {shouldResetCube ? (
+                    <span className="text-xs" style={{ color: 'var(--theme-error, #ef4444)' }}>
+                      solve cube to restart scramble
+                    </span>
+                  ) : recoveryMoves.length > 0 ? (
+                    <>
+                      <span className="text-xs" style={{ color: 'var(--theme-error, #ef4444)' }}>
+                        undo:
+                      </span>
+                      <div className="flex gap-1 text-sm md:gap-2 md:text-xl">
+                        {recoveryMoves.map((move, i) => (
+                          <RecoveryMoveNotation key={`recovery-${i}`} move={move} />
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -142,7 +150,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="text-3xl font-medium tracking-widest"
+            className="text-xl font-medium tracking-widest md:text-3xl"
             style={{ color: 'var(--theme-accent)' }}
           >
             inspecting...
@@ -155,7 +163,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="text-7xl font-bold tabular-nums tracking-tight"
+            className="text-5xl font-bold tabular-nums tracking-tight md:text-7xl"
             style={{ color: 'var(--theme-text)' }}
           >
             {formatTime(time)}
@@ -168,7 +176,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="text-7xl font-bold tabular-nums tracking-tight"
+            className="text-5xl font-bold tabular-nums tracking-tight md:text-7xl"
             style={{ color: 'var(--theme-accent)' }}
           >
             {formatTime(time)}

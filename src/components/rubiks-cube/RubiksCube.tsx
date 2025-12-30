@@ -465,7 +465,6 @@ export const RubiksCube = memo(forwardRef<RubiksCubeRef, RubiksCubeProps>(({ qua
       const nextMove = animationQueue.current.shift()!
       
       const targetCubies: THREE.Object3D[] = []
-      const targetCubies: THREE.Object3D[] = []
       
       // We need to find which cubies are currently in the target layer
       // Since we rotate the objects, their world position changes.

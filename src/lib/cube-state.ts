@@ -53,8 +53,10 @@ export async function getKPuzzle(): Promise<KPuzzle> {
   return cachedKPuzzle
 }
 
+export const SOLVED_FACELETS = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'
+
 function createSolvedFacelets(): string {
-  return 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'
+  return SOLVED_FACELETS
 }
 
 export async function createSolvedState(): Promise<CubeState> {
@@ -89,7 +91,7 @@ function rotateFaceCCW(facelets: string, faceStart: number): string {
   return result
 }
 
-function applyMoveToFacelets(facelets: string, move: string): string {
+export function applyMoveToFacelets(facelets: string, move: string): string {
   const arr = facelets.split('')
 
   const cycle4CW = (a: number, b: number, c: number, d: number) => {
@@ -264,4 +266,17 @@ export function patternToFacelets(
     return faceletsStringToRecord(facelets)
   }
   return faceletsStringToRecord(createSolvedFacelets())
+}
+
+export function computeScrambleFacelets(scramble: string): string[] {
+  const moves = scramble.trim().split(/\s+/).filter(Boolean)
+  const facelets: string[] = [SOLVED_FACELETS]
+  
+  let current = SOLVED_FACELETS
+  for (const move of moves) {
+    current = applyMoveToFacelets(current, move)
+    facelets.push(current)
+  }
+  
+  return facelets
 }

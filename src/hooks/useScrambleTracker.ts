@@ -7,6 +7,7 @@ import {
   isSameFace,
   type ParsedMove,
 } from '@/lib/move-utils'
+import { computeScrambleFacelets, SOLVED_FACELETS } from '@/lib/cube-state'
 
 export type { ParsedMove }
 
@@ -28,16 +29,19 @@ export interface ScrambleTrackerState {
   divergedMoves: ParsedMove[]
   isSolved: boolean
   solutionMoves: string[]
+  scrambleFacelets: string[]
+  shouldResetCube: boolean
 }
 
 type Action =
   | { type: 'SET_SCRAMBLE'; scramble: string }
   | { type: 'PERFORM_MOVE'; move: string }
+  | { type: 'SYNC_WITH_FACELETS'; facelets: string }
   | { type: 'RESET' }
   | { type: 'SET_SOLVED'; isSolved: boolean }
   | { type: 'START_SOLVING' }
 
-const MAX_DIVERGENCE = 10
+const MAX_DIVERGENCE = 6
 
 function createInitialState(): ScrambleTrackerState {
   return {
@@ -49,6 +53,8 @@ function createInitialState(): ScrambleTrackerState {
     divergedMoves: [],
     isSolved: true,
     solutionMoves: [],
+    scrambleFacelets: [],
+    shouldResetCube: false,
   }
 }
 
@@ -66,6 +72,8 @@ function reducer(state: ScrambleTrackerState, action: Action): ScrambleTrackerSt
         status: i === 0 ? 'current' : 'pending',
       }))
 
+      const scrambleFacelets = computeScrambleFacelets(action.scramble)
+
       return {
         status: 'scrambling',
         originalScramble: action.scramble,
@@ -75,6 +83,8 @@ function reducer(state: ScrambleTrackerState, action: Action): ScrambleTrackerSt
         divergedMoves: [],
         isSolved: false,
         solutionMoves: [],
+        scrambleFacelets,
+        shouldResetCube: false,
       }
     }
 
@@ -84,6 +94,79 @@ function reducer(state: ScrambleTrackerState, action: Action): ScrambleTrackerSt
         ...state,
         status: 'solving',
         solutionMoves: [],
+      }
+    }
+
+    case 'SYNC_WITH_FACELETS': {
+      if (state.status !== 'scrambling' && state.status !== 'diverged') {
+        return state
+      }
+
+      const { facelets } = action
+      const { scrambleFacelets, moves, currentIndex } = state
+
+      if (facelets === SOLVED_FACELETS) {
+        if (state.status === 'scrambling' && currentIndex === 0 && state.recoveryMoves.length === 0) {
+          return state
+        }
+        const newMoves = moves.map((m, i) => ({
+          ...m,
+          status: i === 0 ? 'current' : 'pending',
+        })) as ScrambleMoveState[]
+        return {
+          ...state,
+          status: 'scrambling',
+          currentIndex: 0,
+          moves: newMoves,
+          recoveryMoves: [],
+          divergedMoves: [],
+          shouldResetCube: false,
+        }
+      }
+
+      const matchIndex = scrambleFacelets.findIndex((sf) => sf === facelets)
+      
+      if (matchIndex !== -1) {
+        if (matchIndex >= scrambleFacelets.length - 1) {
+          return {
+            ...state,
+            status: 'completed',
+            currentIndex: moves.length,
+            moves: moves.map((m) => ({ ...m, status: 'completed' })) as ScrambleMoveState[],
+            recoveryMoves: [],
+            divergedMoves: [],
+            shouldResetCube: false,
+          }
+        }
+
+        if (state.status === 'scrambling' && currentIndex === matchIndex && state.recoveryMoves.length === 0) {
+          return state
+        }
+
+        const newMoves = moves.map((m, i) => ({
+          ...m,
+          move: m.originalMove,
+          status: i < matchIndex ? 'completed' : i === matchIndex ? 'current' : 'pending',
+        })) as ScrambleMoveState[]
+
+        return {
+          ...state,
+          status: 'scrambling',
+          currentIndex: matchIndex,
+          moves: newMoves,
+          recoveryMoves: [],
+          divergedMoves: [],
+          shouldResetCube: false,
+        }
+      }
+
+      const tooFarDiverged = state.divergedMoves.length > MAX_DIVERGENCE
+      if (state.shouldResetCube === tooFarDiverged) {
+        return state
+      }
+      return {
+        ...state,
+        shouldResetCube: tooFarDiverged,
       }
     }
 
@@ -250,6 +333,10 @@ export function useScrambleTracker() {
     dispatch({ type: 'PERFORM_MOVE', move })
   }, [])
 
+  const syncWithFacelets = useCallback((facelets: string) => {
+    dispatch({ type: 'SYNC_WITH_FACELETS', facelets })
+  }, [])
+
   const reset = useCallback(() => {
     dispatch({ type: 'RESET' })
   }, [])
@@ -262,12 +349,13 @@ export function useScrambleTracker() {
     dispatch({ type: 'START_SOLVING' })
   }, [])
 
-  const shouldReset = state.status === 'diverged' && state.divergedMoves.length > MAX_DIVERGENCE
+  const shouldReset = state.shouldResetCube
 
   return {
     state,
     setScramble,
     performMove,
+    syncWithFacelets,
     reset,
     setSolved,
     startSolving,

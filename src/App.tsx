@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { StatusBar } from '@/components/layout/StatusBar'
+import { StatusBar, CubeConnectionStatus } from '@/components/layout/StatusBar'
 import { KeyboardHints } from '@/components/keyboard-hints'
 import { CommandPalette } from '@/components/command-palette'
 import { CubeViewer, type RubiksCubeRef, type CubeColors } from '@/components/cube'
@@ -9,6 +9,7 @@ import { ScrambleNotation } from '@/components/scramble-notation'
 import { SolveResults } from '@/components/solve-results'
 import { SolvesList } from '@/components/solves-list'
 import { SolveDetailPage } from '@/components/solve-detail-page'
+import { RecentSolves } from '@/components/recent-solves'
 import { Simulator } from '@/components/simulator'
 import { SettingsPanel } from '@/components/settings-panel'
 import { useCubeState } from '@/hooks/useCubeState'
@@ -22,7 +23,7 @@ import { useSettings } from '@/hooks/useSettings'
 import { ConnectionModal } from '@/components/connection-modal'
 import { CalibrationModal } from '@/components/calibration-modal'
 import { CubeInfoModal } from '@/components/cube-info-modal'
-import { generateScramble } from '@/lib/cube-state'
+import { generateScramble, SOLVED_FACELETS } from '@/lib/cube-state'
 import { setCubeColors } from '@/lib/cube-state'
 import { setCubeFaceColors } from '@/lib/cube-faces'
 import { getCubeColors } from '@/lib/themes'
@@ -60,6 +61,7 @@ function App() {
     state: scrambleState,
     setScramble,
     performMove: trackMove,
+    syncWithFacelets,
     setSolved,
     startSolving,
   } = useScrambleTracker()
@@ -122,6 +124,10 @@ function App() {
       setSolved(solved)
     }
 
+    if (solved && (scrambleState.status === 'scrambling' || scrambleState.status === 'diverged')) {
+      syncWithFacelets(SOLVED_FACELETS)
+    }
+
     if (solved && timer.status === 'running') {
       const finalTime = timer.stopTimer()
       if (finalTime && scrambleState.originalScramble) {
@@ -148,9 +154,11 @@ function App() {
     cubeFaces,
     checkCubeSolved,
     setSolved,
+    syncWithFacelets,
     timer,
     scrambleState.originalScramble,
     scrambleState.isSolved,
+    scrambleState.status,
     addSolve,
     getHistory,
     gyroRecorder,
@@ -172,12 +180,13 @@ function App() {
     applyScramble,
   ])
 
-  const calibrationActionsRef = useRef<{ resetGyro: () => void; syncCube: () => void }>({
+  const calibrationActionsRef = useRef<{ resetGyro: () => void; syncCube: () => void; nextScramble: () => void }>({
     resetGyro: () => {},
     syncCube: () => {},
+    nextScramble: () => {},
   })
 
-  const checkCalibrationSequence = useCallback((move: string): 'gyro' | 'cube' | null => {
+  const checkCalibrationSequence = useCallback((move: string): 'gyro' | 'cube' | 'scramble' | null => {
     const now = Date.now()
     recentMovesRef.current.push({ move, time: now })
 
@@ -205,28 +214,43 @@ function App() {
           return 'cube'
         }
       }
+      if (lastFour.every((m) => m === 'D' || m === "D'")) {
+        const dCount = lastFour.filter((m) => m === 'D').length
+        const dPrimeCount = lastFour.filter((m) => m === "D'").length
+        if (dCount === 4 || dPrimeCount === 4 || (dCount === 2 && dPrimeCount === 2)) {
+          recentMovesRef.current = []
+          return 'scramble'
+        }
+      }
     }
 
     return null
   }, [])
 
   const handleMove = useCallback(
-    (move: string) => {
+    async (move: string) => {
       cubeRef.current?.performMove(move)
-      updateCubeState(move)
+      const newFacelets = await updateCubeState(move)
       updateCubeFaces(move)
 
       const calibration = checkCalibrationSequence(move)
       if (calibration === 'gyro') {
         calibrationActionsRef.current.resetGyro()
+        syncWithFacelets(newFacelets)
         return
       }
       if (calibration === 'cube') {
         calibrationActionsRef.current.syncCube()
+        syncWithFacelets(newFacelets)
+        return
+      }
+      if (calibration === 'scramble' && timer.status === 'stopped') {
+        calibrationActionsRef.current.nextScramble()
         return
       }
 
       trackMove(move)
+      syncWithFacelets(newFacelets)
       gyroRecorder.recordMove(move)
 
       if (timer.status === 'inspection') {
@@ -234,7 +258,7 @@ function App() {
         gyroRecorder.startRecording()
       }
     },
-    [trackMove, timer, updateCubeState, updateCubeFaces, gyroRecorder, checkCalibrationSequence],
+    [trackMove, syncWithFacelets, timer, updateCubeState, updateCubeFaces, gyroRecorder, checkCalibrationSequence],
   )
 
   const {
@@ -319,8 +343,9 @@ function App() {
     calibrationActionsRef.current = {
       resetGyro,
       syncCube: handleSyncCube,
+      nextScramble: handleNewScramble,
     }
-  }, [resetGyro, handleSyncCube])
+  }, [resetGyro, handleSyncCube, handleNewScramble])
 
   useEffect(() => {
     if (isConnected && !hasInitializedRef.current) {
@@ -414,7 +439,7 @@ function App() {
 
         <main className="flex flex-1 flex-col overflow-hidden">
           {activeTab === 'timer' ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
+            <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
               <StatusBar
                 solves={solves}
                 batteryLevel={batteryLevel}
@@ -441,6 +466,7 @@ function App() {
                   quaternionRef={quaternionRef}
                   cubeRef={cubeRef}
                   solve={solves.length > 0 ? solves[0] : undefined}
+                  animationSpeed={settings.animationSpeed}
                 />
               ) : (
                 <>
@@ -450,7 +476,7 @@ function App() {
                     time={timer.time}
                   />
 
-                  <div className="relative aspect-square w-full max-w-sm">
+                  <div className="relative aspect-square w-full max-w-[240px] md:max-w-sm">
                     {!isLoading && (
                       <CubeViewer
                         pattern={frozenPattern}
@@ -462,6 +488,16 @@ function App() {
                       />
                     )}
                   </div>
+
+                  <CubeConnectionStatus
+                    batteryLevel={batteryLevel}
+                    isConnected={isConnected}
+                    isConnecting={isConnecting}
+                    onConnect={connect}
+                    onOpenCubeInfo={() => setIsCubeInfoOpen(true)}
+                  />
+
+                  <RecentSolves solves={solves} />
                 </>
               )}
             </div>
@@ -517,8 +553,10 @@ function App() {
           )}
         </main>
 
-        <KeyboardHints isConnected={isConnected} />
-        <Footer />
+        <div className="hidden md:block">
+          <KeyboardHints isConnected={isConnected} />
+          <Footer />
+        </div>
 
         <CommandPalette
           isOpen={isCommandPaletteOpen}

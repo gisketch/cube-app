@@ -145,7 +145,7 @@ export function CommandPalette({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="pointer-events-auto w-full max-w-lg overflow-hidden rounded-lg shadow-2xl"
+              className="pointer-events-auto h-full w-full overflow-hidden shadow-2xl md:h-auto md:max-w-lg md:rounded-lg"
               style={{
                 backgroundColor: 'var(--theme-bgSecondary)',
                 border: '1px solid var(--theme-subAlt)',
