@@ -1,6 +1,6 @@
 export function KeyboardHints({ isConnected }: { isConnected: boolean }) {
   return (
-    <div 
+    <div
       className="flex items-center justify-center gap-6 py-2 text-xs"
       style={{ color: 'var(--theme-sub)' }}
     >
@@ -41,11 +41,11 @@ export function KeyboardHints({ isConnected }: { isConnected: boolean }) {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd 
+    <kbd
       className="rounded px-1.5 py-0.5 text-xs font-medium"
-      style={{ 
+      style={{
         backgroundColor: 'var(--theme-subAlt)',
-        color: 'var(--theme-text)'
+        color: 'var(--theme-text)',
       }}
     >
       {children}

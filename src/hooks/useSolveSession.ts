@@ -23,7 +23,12 @@ export function useSolveSession() {
 
   const cubeRef = useRef<RubiksCubeRef>(null)
 
-  const { cubeState, isLoading, performMove: updateCubeState, reset: resetCubeState } = useCubeState()
+  const {
+    cubeState,
+    isLoading,
+    performMove: updateCubeState,
+    reset: resetCubeState,
+  } = useCubeState()
   const {
     state: scrambleState,
     setScramble,
@@ -62,7 +67,7 @@ export function useSolveSession() {
         timer.startTimer()
       }
     },
-    [trackMove, timer, updateCubeState, updateCubeFaces, gyroRecorder, handleCalibration]
+    [trackMove, timer, updateCubeState, updateCubeFaces, gyroRecorder, handleCalibration],
   )
 
   const ganCube = useGanCube(handleMove)
@@ -124,7 +129,14 @@ export function useSolveSession() {
       startSolving()
       gyroRecorder.startRecording()
     }
-  }, [scrambleState.status, scrambleState.originalScramble, timer, startSolving, applyScramble, gyroRecorder])
+  }, [
+    scrambleState.status,
+    scrambleState.originalScramble,
+    timer,
+    startSolving,
+    applyScramble,
+    gyroRecorder,
+  ])
 
   useEffect(() => {
     if (!gyroRecorder.isRecording() || !isConnected) return

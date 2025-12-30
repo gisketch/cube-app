@@ -1,16 +1,20 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, RotateCcw, BarChart3, Play, Pause, ArrowLeft, SkipBack, SkipForward } from 'lucide-react'
+import {
+  ChevronRight,
+  RotateCcw,
+  BarChart3,
+  Play,
+  Pause,
+  ArrowLeft,
+  SkipBack,
+  SkipForward,
+} from 'lucide-react'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import * as THREE from 'three'
 import { CubeViewer, type RubiksCubeRef } from '@/components/cube'
 import { DEFAULT_CONFIG } from '@/config/scene-config'
-import { createSolvedCube, applyMove, cloneCube, cubeFacesToFacelets, COLOR_HEX, type CubeFaces } from '@/lib/cube-faces'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { createSolvedCube, applyMove, cubeFacesToFacelets, COLOR_HEX } from '@/lib/cube-faces'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatTime, formatDuration } from '@/lib/format'
 import type { CFOPAnalysis, CFOPPhase } from '@/lib/cfop-analyzer'
 import type { KPattern } from 'cubing/kpuzzle'
@@ -158,7 +162,10 @@ function ActionButton({
 
 function CubeNet({ scramble }: { scramble: string }) {
   const cubeState = useMemo(() => {
-    const moves = scramble.trim().split(/\s+/).filter((m) => m.length > 0)
+    const moves = scramble
+      .trim()
+      .split(/\s+/)
+      .filter((m) => m.length > 0)
     let cube = createSolvedCube()
     for (const move of moves) {
       cube = applyMove(cube, move)
@@ -193,7 +200,14 @@ interface PhaseBarProps {
   phaseColor: string
 }
 
-function VerticalBar({ label, moves, recognitionRatio, maxMoves, totalTime, phaseColor }: PhaseBarProps) {
+function VerticalBar({
+  label,
+  moves,
+  recognitionRatio,
+  maxMoves,
+  totalTime,
+  phaseColor,
+}: PhaseBarProps) {
   const barHeight = maxMoves > 0 ? (moves / maxMoves) * 100 : 0
   const recognitionHeight = recognitionRatio * 100
   const executionRatio = 1 - recognitionRatio
@@ -278,7 +292,10 @@ function VerticalBar({ label, moves, recognitionRatio, maxMoves, totalTime, phas
 }
 
 function parseAlgorithm(alg: string): string[] {
-  return alg.trim().split(/\s+/).filter((m) => m.length > 0)
+  return alg
+    .trim()
+    .split(/\s+/)
+    .filter((m) => m.length > 0)
 }
 
 export function SolveResults({
@@ -302,7 +319,6 @@ export function SolveResults({
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(500)
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0)
-  const [, forceUpdate] = useState(0)
 
   const hasGyroData = Boolean(solve?.gyroData && solve.gyroData.length > 0)
   const hasMoveTimings = Boolean(solve?.moveTimings && solve.moveTimings.length > 0)
@@ -337,7 +353,16 @@ export function SolveResults({
   const ollTps = ollDuration > 0 ? ollMoves / (ollDuration / 1000) : 0
   const pllTps = pllDuration > 0 ? pllMoves / (pllDuration / 1000) : 0
 
-  const maxMoves = Math.max(crossMoves, f2l1Moves, f2l2Moves, f2l3Moves, f2l4Moves, ollMoves, pllMoves, 1)
+  const maxMoves = Math.max(
+    crossMoves,
+    f2l1Moves,
+    f2l2Moves,
+    f2l3Moves,
+    f2l4Moves,
+    ollMoves,
+    pllMoves,
+    1,
+  )
 
   const phases = [
     { label: 'Cross', moves: crossMoves, recognitionRatio: 0.15, colorVar: '--theme-phaseCross' },
@@ -346,112 +371,120 @@ export function SolveResults({
     { label: 'F2L 3', moves: f2l3Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L3' },
     { label: 'F2L 4', moves: f2l4Moves, recognitionRatio: 0.25, colorVar: '--theme-phaseF2L4' },
     { label: 'OLL', moves: ollMoves, recognitionRatio: 0.35, colorVar: '--theme-phaseOLL' },
-    { label: 'PLL', moves: pllMoves, recognitionRatio: 0.30, colorVar: '--theme-phasePLL' },
+    { label: 'PLL', moves: pllMoves, recognitionRatio: 0.3, colorVar: '--theme-phasePLL' },
   ]
 
-  const { replayStates, replayPhases, allMoves, totalMoves } = useMemo(() => {
-    if (!solve || !isReplayMode) {
-      return { replayStates: [], replayPhases: [], allMoves: [], totalMoves: 0 }
-    }
-
-    const scrambleMoves = parseAlgorithm(solve.scramble)
-    let solutionMoves = solve.solution
-
-    if (solve.cfopAnalysis) {
-      const analysisMovesCount =
-        solve.cfopAnalysis.cross.moves.length +
-        solve.cfopAnalysis.f2l.reduce((sum: number, slot: CFOPPhase) => sum + slot.moves.length, 0) +
-        solve.cfopAnalysis.oll.moves.length +
-        solve.cfopAnalysis.pll.moves.length
-
-      if (analysisMovesCount > solutionMoves.length) {
-        solutionMoves = [
-          ...solve.cfopAnalysis.cross.moves,
-          ...solve.cfopAnalysis.f2l.flatMap((slot: CFOPPhase) => slot.moves),
-          ...solve.cfopAnalysis.oll.moves,
-          ...solve.cfopAnalysis.pll.moves,
-        ]
-      }
-    }
-
-    let cube = createSolvedCube()
-    for (const move of scrambleMoves) {
-      cube = applyMove(cube, move)
-    }
-
-    const stateHistory: CubeFaces[] = [cloneCube(cube)]
-    for (const move of solutionMoves) {
-      cube = applyMove(cube, move)
-      stateHistory.push(cloneCube(cube))
-    }
-
-    const moveCount = solutionMoves.length
-    const phaseMarkers: PhaseMarker[] = []
-
-    if (solve.cfopAnalysis && moveCount > 0) {
-      let currentIndex = 0
-      const cfop = solve.cfopAnalysis
-
-      if (cfop.cross.moves.length > 0) {
-        phaseMarkers.push({
-          name: 'Cross',
-          startIndex: currentIndex,
-          endIndex: currentIndex + cfop.cross.moves.length - 1,
-          color: 'var(--theme-phaseCross)',
-          widthPercent: (cfop.cross.moves.length / moveCount) * 100,
-        })
-        currentIndex += cfop.cross.moves.length
-      }
-
-      const f2lColors = ['var(--theme-phaseF2L1)', 'var(--theme-phaseF2L2)', 'var(--theme-phaseF2L3)', 'var(--theme-phaseF2L4)']
-      cfop.f2l.forEach((slot: CFOPPhase, i: number) => {
-        if (slot.moves.length > 0) {
-          phaseMarkers.push({
-            name: `F2L ${i + 1}`,
-            startIndex: currentIndex,
-            endIndex: currentIndex + slot.moves.length - 1,
-            color: f2lColors[i],
-            widthPercent: (slot.moves.length / moveCount) * 100,
-          })
-          currentIndex += slot.moves.length
+  const { initialScrambledFacelets, replayPhases, allMoves, totalMoves, timeOffset } =
+    useMemo(() => {
+      if (!solve) {
+        return {
+          initialScrambledFacelets: '',
+          replayPhases: [],
+          allMoves: [],
+          totalMoves: 0,
+          timeOffset: 0,
         }
-      })
-
-      if (cfop.oll.moves.length > 0) {
-        phaseMarkers.push({
-          name: 'OLL',
-          startIndex: currentIndex,
-          endIndex: currentIndex + cfop.oll.moves.length - 1,
-          color: 'var(--theme-phaseOLL)',
-          widthPercent: (cfop.oll.moves.length / moveCount) * 100,
-        })
-        currentIndex += cfop.oll.moves.length
       }
 
-      if (cfop.pll.moves.length > 0) {
-        phaseMarkers.push({
-          name: 'PLL',
-          startIndex: currentIndex,
-          endIndex: currentIndex + cfop.pll.moves.length - 1,
-          color: 'var(--theme-phasePLL)',
-          widthPercent: (cfop.pll.moves.length / moveCount) * 100,
-        })
+      const scrambleMoves = parseAlgorithm(solve.scramble)
+      let solutionMoves = solve.solution
+      const offset = solve.moveTimings?.[0]?.time ?? 0
+
+      if (solve.cfopAnalysis) {
+        const analysisMovesCount =
+          solve.cfopAnalysis.cross.moves.length +
+          solve.cfopAnalysis.f2l.reduce(
+            (sum: number, slot: CFOPPhase) => sum + slot.moves.length,
+            0,
+          ) +
+          solve.cfopAnalysis.oll.moves.length +
+          solve.cfopAnalysis.pll.moves.length
+
+        if (analysisMovesCount > solutionMoves.length) {
+          solutionMoves = [
+            ...solve.cfopAnalysis.cross.moves,
+            ...solve.cfopAnalysis.f2l.flatMap((slot: CFOPPhase) => slot.moves),
+            ...solve.cfopAnalysis.oll.moves,
+            ...solve.cfopAnalysis.pll.moves,
+          ]
+        }
       }
-    }
 
-    return {
-      replayStates: stateHistory,
-      replayPhases: phaseMarkers,
-      allMoves: solutionMoves,
-      totalMoves: solutionMoves.length,
-    }
-  }, [solve, isReplayMode])
+      let cube = createSolvedCube()
+      for (const move of scrambleMoves) {
+        cube = applyMove(cube, move)
+      }
+      const scrambledFacelets = cubeFacesToFacelets(cube)
 
-  const currentReplayState = replayStates[currentMoveIndex + 1] || replayStates[0]
-  const currentFacelets = useMemo(
-    () => (currentReplayState ? cubeFacesToFacelets(currentReplayState) : ''),
-    [currentReplayState]
-  )
+      const moveCount = solutionMoves.length
+      const phaseMarkers: PhaseMarker[] = []
+
+      if (solve.cfopAnalysis && moveCount > 0) {
+        let currentIndex = 0
+        const cfop = solve.cfopAnalysis
+
+        if (cfop.cross.moves.length > 0) {
+          phaseMarkers.push({
+            name: 'Cross',
+            startIndex: currentIndex,
+            endIndex: currentIndex + cfop.cross.moves.length - 1,
+            color: 'var(--theme-phaseCross)',
+            widthPercent: (cfop.cross.moves.length / moveCount) * 100,
+          })
+          currentIndex += cfop.cross.moves.length
+        }
+
+        const f2lColors = [
+          'var(--theme-phaseF2L1)',
+          'var(--theme-phaseF2L2)',
+          'var(--theme-phaseF2L3)',
+          'var(--theme-phaseF2L4)',
+        ]
+        cfop.f2l.forEach((slot: CFOPPhase, i: number) => {
+          if (slot.moves.length > 0) {
+            phaseMarkers.push({
+              name: `F2L ${i + 1}`,
+              startIndex: currentIndex,
+              endIndex: currentIndex + slot.moves.length - 1,
+              color: f2lColors[i],
+              widthPercent: (slot.moves.length / moveCount) * 100,
+            })
+            currentIndex += slot.moves.length
+          }
+        })
+
+        if (cfop.oll.moves.length > 0) {
+          phaseMarkers.push({
+            name: 'OLL',
+            startIndex: currentIndex,
+            endIndex: currentIndex + cfop.oll.moves.length - 1,
+            color: 'var(--theme-phaseOLL)',
+            widthPercent: (cfop.oll.moves.length / moveCount) * 100,
+          })
+          currentIndex += cfop.oll.moves.length
+        }
+
+        if (cfop.pll.moves.length > 0) {
+          phaseMarkers.push({
+            name: 'PLL',
+            startIndex: currentIndex,
+            endIndex: currentIndex + cfop.pll.moves.length - 1,
+            color: 'var(--theme-phasePLL)',
+            widthPercent: (cfop.pll.moves.length / moveCount) * 100,
+          })
+        }
+      }
+
+      return {
+        initialScrambledFacelets: scrambledFacelets,
+        replayPhases: phaseMarkers,
+        allMoves: solutionMoves,
+        totalMoves: solutionMoves.length,
+        timeOffset: offset,
+      }
+    }, [solve])
+
+  const [replayKey, setReplayKey] = useState(0)
 
   useEffect(() => {
     currentMoveIndexRef.current = currentMoveIndex
@@ -484,23 +517,24 @@ export function SolveResults({
       const animate = () => {
         if (!isPlayingRef.current) return
 
-        const elapsed = (performance.now() - playbackStartTimeRef.current) * speedMultiplier + startTime
+        const elapsed =
+          (performance.now() - playbackStartTimeRef.current) * speedMultiplier + startTime
         setCurrentElapsedTime(elapsed)
 
-        if (enableGyro && hasGyroData && solve.gyroData) {
-          const gyroFrame = solve.gyroData.find((f, i) => {
-            const next = solve.gyroData![i + 1]
-            return !next || (elapsed >= f.time && elapsed < next.time)
-          })
-          if (gyroFrame) {
-            replayQuaternionRef.current.set(
-              gyroFrame.quaternion.x,
-              gyroFrame.quaternion.y,
-              gyroFrame.quaternion.z,
-              gyroFrame.quaternion.w,
-            )
-            forceUpdate((n) => n + 1)
+        if (enableGyro && hasGyroData && solve.gyroData && solve.gyroData.length > 0) {
+          let gyroFrame = solve.gyroData[0]
+          for (let i = solve.gyroData.length - 1; i >= 0; i--) {
+            if (solve.gyroData[i].time <= elapsed) {
+              gyroFrame = solve.gyroData[i]
+              break
+            }
           }
+          replayQuaternionRef.current.set(
+            gyroFrame.quaternion.x,
+            gyroFrame.quaternion.y,
+            gyroFrame.quaternion.z,
+            gyroFrame.quaternion.w,
+          )
         }
 
         let targetMoveIdx = -1
@@ -560,41 +594,71 @@ export function SolveResults({
         animationFrameRef.current = null
       }
     }
-  }, [isPlaying, totalMoves, playbackSpeed, hasMoveTimings, hasGyroData, enableGyro, solve, allMoves])
+  }, [
+    isPlaying,
+    totalMoves,
+    playbackSpeed,
+    hasMoveTimings,
+    hasGyroData,
+    enableGyro,
+    solve,
+    allMoves,
+  ])
 
   const handleSeek = useCallback(
     (index: number) => {
       const newIndex = Math.max(-1, Math.min(index, totalMoves - 1))
+      const prevIndex = currentMoveIndexRef.current
       currentMoveIndexRef.current = newIndex
       setCurrentMoveIndex(newIndex)
 
+      if (newIndex < prevIndex) {
+        setReplayKey((k) => k + 1)
+        setTimeout(() => {
+          if (replayCubeRef.current) {
+            for (let i = 0; i <= newIndex; i++) {
+              if (i >= 0 && i < allMoves.length) {
+                replayCubeRef.current.performMove(allMoves[i])
+              }
+            }
+          }
+        }, 50)
+      } else if (newIndex > prevIndex && replayCubeRef.current) {
+        for (let i = prevIndex + 1; i <= newIndex; i++) {
+          if (i >= 0 && i < allMoves.length) {
+            replayCubeRef.current.performMove(allMoves[i])
+          }
+        }
+      }
+
       if (solve?.moveTimings && solve.moveTimings.length > 0) {
-        const elapsed = newIndex >= 0 && newIndex < solve.moveTimings.length
-          ? solve.moveTimings[newIndex].time
-          : 0
+        const elapsed =
+          newIndex >= 0 && newIndex < solve.moveTimings.length
+            ? solve.moveTimings[newIndex].time
+            : (solve.moveTimings[0]?.time ?? 0)
         setCurrentElapsedTime(elapsed)
 
         if (enableGyro && solve.gyroData && solve.gyroData.length > 0) {
-          const gyroFrame = solve.gyroData.find((f, i) => {
-            const next = solve.gyroData![i + 1]
-            return !next || (elapsed >= f.time && elapsed < next.time)
-          })
-          if (gyroFrame) {
-            replayQuaternionRef.current.set(
-              gyroFrame.quaternion.x,
-              gyroFrame.quaternion.y,
-              gyroFrame.quaternion.z,
-              gyroFrame.quaternion.w,
-            )
-            forceUpdate((n) => n + 1)
+          let gyroFrame = solve.gyroData[0]
+          for (let i = solve.gyroData.length - 1; i >= 0; i--) {
+            if (solve.gyroData[i].time <= elapsed) {
+              gyroFrame = solve.gyroData[i]
+              break
+            }
           }
+          replayQuaternionRef.current.set(
+            gyroFrame.quaternion.x,
+            gyroFrame.quaternion.y,
+            gyroFrame.quaternion.z,
+            gyroFrame.quaternion.w,
+          )
         }
       } else {
         const estimatedTime = totalMoves > 0 ? ((newIndex + 1) / totalMoves) * time : 0
         setCurrentElapsedTime(Math.max(0, estimatedTime))
       }
     },
-    [totalMoves, solve, enableGyro, time],
+    [totalMoves, solve, enableGyro, time, allMoves],
   )
 
   const togglePlay = () => {
@@ -605,19 +669,23 @@ export function SolveResults({
   }
 
   const stepBack = () => handleSeek(currentMoveIndex - 1)
-  const stepForward = () => {
-    const next = currentMoveIndex + 1
-    handleSeek(next)
-    if (replayCubeRef.current && next >= 0 && next < allMoves.length) {
-      replayCubeRef.current.performMove(allMoves[next])
-    }
-  }
+  const stepForward = () => handleSeek(currentMoveIndex + 1)
 
   const resetReplay = () => {
     currentMoveIndexRef.current = -1
     setCurrentMoveIndex(-1)
     setCurrentElapsedTime(0)
     setIsPlaying(false)
+    setReplayKey((k) => k + 1)
+    if (solve?.gyroData?.[0]) {
+      const firstFrame = solve.gyroData[0]
+      replayQuaternionRef.current.set(
+        firstFrame.quaternion.x,
+        firstFrame.quaternion.y,
+        firstFrame.quaternion.z,
+        firstFrame.quaternion.w,
+      )
+    }
   }
 
   const enterReplayMode = () => {
@@ -625,6 +693,16 @@ export function SolveResults({
     setCurrentMoveIndex(-1)
     setCurrentElapsedTime(0)
     setIsPlaying(false)
+    setReplayKey((k) => k + 1)
+    if (solve?.gyroData?.[0]) {
+      const firstFrame = solve.gyroData[0]
+      replayQuaternionRef.current.set(
+        firstFrame.quaternion.x,
+        firstFrame.quaternion.y,
+        firstFrame.quaternion.z,
+        firstFrame.quaternion.w,
+      )
+    }
   }
 
   const exitReplayMode = () => {
@@ -636,15 +714,18 @@ export function SolveResults({
 
   const getCurrentPhase = () => {
     if (currentMoveIndex < 0) return null
-    return replayPhases.find((p) => currentMoveIndex >= p.startIndex && currentMoveIndex <= p.endIndex)
+    return replayPhases.find(
+      (p) => currentMoveIndex >= p.startIndex && currentMoveIndex <= p.endIndex,
+    )
   }
 
   const currentPhase = getCurrentPhase()
   const progressPercent = totalMoves > 0 ? ((currentMoveIndex + 1) / totalMoves) * 100 : 0
 
-  const canReplay = solve && (solve.gyroData?.length || solve.moveTimings?.length || solve.solution?.length)
+  const canReplay =
+    solve && (solve.gyroData?.length || solve.moveTimings?.length || solve.solution?.length)
 
-  const displayTime = isReplayMode ? currentElapsedTime : time
+  const displayTime = isReplayMode ? Math.max(0, currentElapsedTime - timeOffset) : time
   const currentMoveCount = isReplayMode ? Math.max(0, currentMoveIndex + 1) : moves
   const displayTps = displayTime > 0 ? (currentMoveCount / (displayTime / 1000)).toFixed(2) : '0.00'
 
@@ -716,10 +797,11 @@ export function SolveResults({
               className="relative flex items-center justify-center"
               style={{ minWidth: 224, minHeight: 224 }}
             >
-              {isReplayMode && currentFacelets ? (
+              {isReplayMode && initialScrambledFacelets ? (
                 <div className="flex h-56 w-56 items-center justify-center">
                   <CubeViewer
-                    facelets={currentFacelets}
+                    key={replayKey}
+                    facelets={initialScrambledFacelets}
                     quaternionRef={enableGyro && hasGyroData ? replayQuaternionRef : undefined}
                     cubeRef={replayCubeRef}
                     config={{
@@ -762,18 +844,27 @@ export function SolveResults({
                 style={{ maxWidth: '400px' }}
               >
                 <div className="mb-1 flex items-center justify-end">
-                  <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--theme-sub)' }}>
+                  <div
+                    className="flex items-center gap-3 text-xs"
+                    style={{ color: 'var(--theme-sub)' }}
+                  >
                     <div className="flex items-center gap-1">
-                      <div className="h-2 w-4 rounded-sm opacity-40" style={{ backgroundColor: 'var(--theme-text)' }} />
+                      <div
+                        className="h-2 w-4 rounded-sm opacity-40"
+                        style={{ backgroundColor: 'var(--theme-text)' }}
+                      />
                       <span>rec</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="h-2 w-4 rounded-sm opacity-90" style={{ backgroundColor: 'var(--theme-text)' }} />
+                      <div
+                        className="h-2 w-4 rounded-sm opacity-90"
+                        style={{ backgroundColor: 'var(--theme-text)' }}
+                      />
                       <span>exec</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex w-full mt-4 gap-1">
+                <div className="mt-4 flex w-full gap-1">
                   {phases.map((phase) => (
                     <VerticalBar
                       key={phase.label}
@@ -818,14 +909,20 @@ export function SolveResults({
                           : `Move ${currentMoveIndex + 1} of ${totalMoves}`}
                     </span>
                     {currentMoveIndex >= 0 && currentMoveIndex < totalMoves && (
-                      <span className="font-mono text-lg font-bold" style={{ color: 'var(--theme-text)' }}>
+                      <span
+                        className="font-mono text-lg font-bold"
+                        style={{ color: 'var(--theme-text)' }}
+                      >
                         {allMoves[currentMoveIndex]}
                       </span>
                     )}
                   </div>
 
                   {hasGyroData && (
-                    <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--theme-sub)' }}>
+                    <label
+                      className="flex items-center gap-2 text-xs"
+                      style={{ color: 'var(--theme-sub)' }}
+                    >
                       <input
                         type="checkbox"
                         checked={enableGyro}
@@ -933,7 +1030,12 @@ export function SolveResults({
                 className="flex w-full max-w-4xl items-center justify-between"
               >
                 <StatCard label="moves" value={moves.toString()} />
-                <PhaseStatCard label="cross" moves={crossMoves} duration={crossDuration} tps={crossTps} />
+                <PhaseStatCard
+                  label="cross"
+                  moves={crossMoves}
+                  duration={crossDuration}
+                  tps={crossTps}
+                />
                 <PhaseStatCard label="f2l" moves={f2lMoves} duration={f2lDuration} tps={f2lTps} />
                 <PhaseStatCard label="oll" moves={ollMoves} duration={ollDuration} tps={ollTps} />
                 <PhaseStatCard label="pll" moves={pllMoves} duration={pllDuration} tps={pllTps} />
@@ -945,7 +1047,7 @@ export function SolveResults({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex items-center gap-4 mt-8"
+            className="mt-8 flex items-center gap-4"
           >
             <ActionButton icon={ChevronRight} onClick={onNextScramble} label="Next Scramble" />
             <ActionButton icon={RotateCcw} onClick={onRepeatScramble} label="Repeat Scramble" />

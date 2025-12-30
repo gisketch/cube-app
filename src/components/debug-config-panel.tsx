@@ -146,7 +146,11 @@ export function DebugConfigPanel({ config, onChange, isOpen, onToggle }: DebugCo
                 className="rounded p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
                 title="Copy config"
               >
-                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-400" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </button>
               <button
                 onClick={onToggle}

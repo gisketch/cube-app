@@ -13,15 +13,20 @@ export function SettingsPanel() {
   const cubeColors = getCubeColors(settings.cubeTheme, settings.theme)
 
   return (
-    <div className="mx-auto max-w-2xl overflow-y-auto h-full p-6 pb-24">
-      <h2 className="mb-6 text-xl font-semibold" style={{ color: 'var(--theme-text)' }}>Settings</h2>
-      
+    <div className="mx-auto h-full max-w-2xl overflow-y-auto p-6 pb-24">
+      <h2 className="mb-6 text-xl font-semibold" style={{ color: 'var(--theme-text)' }}>
+        Settings
+      </h2>
+
       <div className="space-y-6">
         <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--theme-bgSecondary)' }}>
-          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--theme-sub)' }}>
+          <h3
+            className="mb-4 text-sm font-medium uppercase tracking-wider"
+            style={{ color: 'var(--theme-sub)' }}
+          >
             Theme
           </h3>
-          
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {themeKeys.map((key) => {
               const theme = themes[key]
@@ -37,9 +42,18 @@ export function SettingsPanel() {
                   }}
                 >
                   <div className="flex gap-1">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: theme.colors.main }} />
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: theme.colors.accent }} />
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: theme.colors.sub }} />
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: theme.colors.main }}
+                    />
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: theme.colors.accent }}
+                    />
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: theme.colors.sub }}
+                    />
                   </div>
                   <span className="text-xs font-medium" style={{ color: theme.colors.text }}>
                     {theme.name}
@@ -51,22 +65,37 @@ export function SettingsPanel() {
         </div>
 
         <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--theme-bgSecondary)' }}>
-          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--theme-sub)' }}>
+          <h3
+            className="mb-4 text-sm font-medium uppercase tracking-wider"
+            style={{ color: 'var(--theme-sub)' }}
+          >
             Cube Colors
           </h3>
-          
+
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex gap-1">
-                <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeWhite }} />
-                <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeYellow }} />
-                <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeGreen }} />
+                <div
+                  className="h-6 w-6 rounded"
+                  style={{ backgroundColor: cubeColors.cubeWhite }}
+                />
+                <div
+                  className="h-6 w-6 rounded"
+                  style={{ backgroundColor: cubeColors.cubeYellow }}
+                />
+                <div
+                  className="h-6 w-6 rounded"
+                  style={{ backgroundColor: cubeColors.cubeGreen }}
+                />
                 <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeBlue }} />
                 <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeRed }} />
-                <div className="h-6 w-6 rounded" style={{ backgroundColor: cubeColors.cubeOrange }} />
+                <div
+                  className="h-6 w-6 rounded"
+                  style={{ backgroundColor: cubeColors.cubeOrange }}
+                />
               </div>
             </div>
-            
+
             <select
               value={settings.cubeTheme}
               onChange={(e) => updateSetting('cubeTheme', e.target.value as CubeTheme)}
@@ -83,7 +112,7 @@ export function SettingsPanel() {
                 </option>
               ))}
             </select>
-            
+
             <p className="text-xs" style={{ color: 'var(--theme-sub)' }}>
               Choose how the cube colors appear in the 3D view, scramble display, and solve history.
               "Standard" uses official competition colors.
@@ -92,15 +121,22 @@ export function SettingsPanel() {
         </div>
 
         <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--theme-bgSecondary)' }}>
-          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--theme-sub)' }}>
+          <h3
+            className="mb-4 text-sm font-medium uppercase tracking-wider"
+            style={{ color: 'var(--theme-sub)' }}
+          >
             Animation
           </h3>
-          
+
           <div className="space-y-4">
             <div>
               <label className="mb-2 flex items-center justify-between">
-                <span className="text-sm" style={{ color: 'var(--theme-text)' }}>Turn Animation Speed</span>
-                <span className="text-sm" style={{ color: 'var(--theme-sub)' }}>{settings.animationSpeed}</span>
+                <span className="text-sm" style={{ color: 'var(--theme-text)' }}>
+                  Turn Animation Speed
+                </span>
+                <span className="text-sm" style={{ color: 'var(--theme-sub)' }}>
+                  {settings.animationSpeed}
+                </span>
               </label>
               <input
                 type="range"
@@ -111,36 +147,51 @@ export function SettingsPanel() {
                 className="h-2 w-full cursor-pointer appearance-none rounded-lg"
                 style={{ backgroundColor: 'var(--theme-subAlt)' }}
               />
-              <div className="mt-1 flex justify-between text-xs" style={{ color: 'var(--theme-sub)' }}>
+              <div
+                className="mt-1 flex justify-between text-xs"
+                style={{ color: 'var(--theme-sub)' }}
+              >
                 <span>Slow</span>
                 <span>Fast</span>
               </div>
             </div>
 
             <div className="text-xs" style={{ color: 'var(--theme-sub)' }}>
-              Higher values make cube animations faster. If you're a fast solver, 
-              increase this to prevent animation lag.
+              Higher values make cube animations faster. If you're a fast solver, increase this to
+              prevent animation lag.
             </div>
           </div>
         </div>
 
         <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--theme-bgSecondary)' }}>
-          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--theme-sub)' }}>
+          <h3
+            className="mb-4 text-sm font-medium uppercase tracking-wider"
+            style={{ color: 'var(--theme-sub)' }}
+          >
             Smart Cube
           </h3>
-          
+
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div
-                className="mt-0.5 h-4 w-4 rounded flex-shrink-0 flex items-center justify-center"
+                className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded"
                 style={{ backgroundColor: 'var(--theme-accent)' }}
               >
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24" style={{ color: 'var(--theme-bg)' }}>
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  viewBox="0 0 24 24"
+                  style={{ color: 'var(--theme-bg)' }}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <span className="text-sm" style={{ color: 'var(--theme-text)' }}>Gyroscope Recording Enabled</span>
+                <span className="text-sm" style={{ color: 'var(--theme-text)' }}>
+                  Gyroscope Recording Enabled
+                </span>
                 <p className="text-xs" style={{ color: 'var(--theme-sub)' }}>
                   Cube orientation is automatically recorded during solves for replay.
                 </p>
@@ -152,9 +203,9 @@ export function SettingsPanel() {
         <button
           onClick={resetSettings}
           className="rounded-lg px-4 py-2 text-sm transition-colors"
-          style={{ 
-            backgroundColor: 'var(--theme-subAlt)', 
-            color: 'var(--theme-text)' 
+          style={{
+            backgroundColor: 'var(--theme-subAlt)',
+            color: 'var(--theme-text)',
           }}
         >
           Reset to Defaults

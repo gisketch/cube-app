@@ -50,7 +50,12 @@ function App() {
   const cubeRef = useRef<RubiksCubeRef>(null)
   const recentMovesRef = useRef<MoveWithTime[]>([])
 
-  const { cubeState, isLoading, performMove: updateCubeState, reset: resetCubeState } = useCubeState()
+  const {
+    cubeState,
+    isLoading,
+    performMove: updateCubeState,
+    reset: resetCubeState,
+  } = useCubeState()
   const {
     state: scrambleState,
     setScramble,
@@ -64,33 +69,36 @@ function App() {
   const { settings } = useSettings()
   const gyroRecorder = useGyroRecorder()
 
-  const cubeColorValues = useMemo(() => 
-    getCubeColors(settings.cubeTheme, settings.theme),
-    [settings.cubeTheme, settings.theme]
+  const cubeColorValues = useMemo(
+    () => getCubeColors(settings.cubeTheme, settings.theme),
+    [settings.cubeTheme, settings.theme],
   )
 
-  const cubeColors: CubeColors = useMemo(() => ({
-    white: cubeColorValues.cubeWhite,
-    yellow: cubeColorValues.cubeYellow,
-    green: cubeColorValues.cubeGreen,
-    blue: cubeColorValues.cubeBlue,
-    red: cubeColorValues.cubeRed,
-    orange: cubeColorValues.cubeOrange,
-    inner: '#0a0a0a',
-  }), [cubeColorValues])
+  const cubeColors: CubeColors = useMemo(
+    () => ({
+      white: cubeColorValues.cubeWhite,
+      yellow: cubeColorValues.cubeYellow,
+      green: cubeColorValues.cubeGreen,
+      blue: cubeColorValues.cubeBlue,
+      red: cubeColorValues.cubeRed,
+      orange: cubeColorValues.cubeOrange,
+      inner: '#0a0a0a',
+    }),
+    [cubeColorValues],
+  )
 
   useEffect(() => {
     setCubeColors(cubeColorValues as Parameters<typeof setCubeColors>[0])
     setCubeFaceColors(cubeColorValues as Parameters<typeof setCubeFaceColors>[0])
   }, [cubeColorValues])
-  const { 
-    faces: cubeFaces, 
-    performMove: updateCubeFaces, 
-    reset: resetCubeFaces, 
+  const {
+    faces: cubeFaces,
+    performMove: updateCubeFaces,
+    reset: resetCubeFaces,
     isSolved: checkCubeSolved,
     getHistory,
     clearHistory,
-    applyScramble 
+    applyScramble,
   } = useCubeFaces()
   const [lastAnalysis, setLastAnalysis] = useState<CFOPAnalysis | null>(null)
   const [lastSolveTime, setLastSolveTime] = useState<number>(0)
@@ -109,11 +117,11 @@ function App() {
 
   useEffect(() => {
     const solved = checkCubeSolved()
-    
+
     if (solved !== scrambleState.isSolved) {
       setSolved(solved)
     }
-    
+
     if (solved && timer.status === 'running') {
       const finalTime = timer.stopTimer()
       if (finalTime && scrambleState.originalScramble) {
@@ -123,9 +131,9 @@ function App() {
         setLastSolveTime(finalTime)
         setLastMoveCount(history.moves.length)
         setLastScramble(scrambleState.originalScramble)
-        
+
         const recordedData = gyroRecorder.stopRecording()
-        
+
         addSolve({
           time: finalTime,
           scramble: scrambleState.originalScramble,
@@ -136,7 +144,17 @@ function App() {
         })
       }
     }
-  }, [cubeFaces, checkCubeSolved, setSolved, timer, scrambleState.originalScramble, scrambleState.isSolved, addSolve, getHistory, gyroRecorder])
+  }, [
+    cubeFaces,
+    checkCubeSolved,
+    setSolved,
+    timer,
+    scrambleState.originalScramble,
+    scrambleState.isSolved,
+    addSolve,
+    getHistory,
+    gyroRecorder,
+  ])
 
   useEffect(() => {
     if (scrambleState.status === 'completed' && timer.status === 'idle') {
@@ -147,7 +165,14 @@ function App() {
       startSolving()
       gyroRecorder.startRecording()
     }
-  }, [scrambleState.status, scrambleState.originalScramble, timer, startSolving, applyScramble, gyroRecorder])
+  }, [
+    scrambleState.status,
+    scrambleState.originalScramble,
+    timer,
+    startSolving,
+    applyScramble,
+    gyroRecorder,
+  ])
 
   const calibrationActionsRef = useRef<{ resetGyro: () => void; syncCube: () => void }>({
     resetGyro: () => {},
@@ -157,19 +182,19 @@ function App() {
   const checkCalibrationSequence = useCallback((move: string): 'gyro' | 'cube' | null => {
     const now = Date.now()
     recentMovesRef.current.push({ move, time: now })
-    
+
     recentMovesRef.current = recentMovesRef.current.filter(
-      (m) => now - m.time < CALIBRATION_SEQUENCE_TIMEOUT
+      (m) => now - m.time < CALIBRATION_SEQUENCE_TIMEOUT,
     )
-    
+
     const recentMoves = recentMovesRef.current.map((m) => m.move)
-    
+
     if (recentMoves.length >= 4) {
       const lastFour = recentMoves.slice(-4)
       if (lastFour.every((m) => m === 'U' || m === "U'")) {
         const uCount = lastFour.filter((m) => m === 'U').length
         const uPrimeCount = lastFour.filter((m) => m === "U'").length
-        if ((uCount === 4) || (uPrimeCount === 4) || (uCount === 2 && uPrimeCount === 2)) {
+        if (uCount === 4 || uPrimeCount === 4 || (uCount === 2 && uPrimeCount === 2)) {
           recentMovesRef.current = []
           return 'gyro'
         }
@@ -177,13 +202,13 @@ function App() {
       if (lastFour.every((m) => m === 'F' || m === "F'")) {
         const fCount = lastFour.filter((m) => m === 'F').length
         const fPrimeCount = lastFour.filter((m) => m === "F'").length
-        if ((fCount === 4) || (fPrimeCount === 4) || (fCount === 2 && fPrimeCount === 2)) {
+        if (fCount === 4 || fPrimeCount === 4 || (fCount === 2 && fPrimeCount === 2)) {
           recentMovesRef.current = []
           return 'cube'
         }
       }
     }
-    
+
     return null
   }, [])
 
@@ -229,11 +254,11 @@ function App() {
 
   useEffect(() => {
     if (!gyroRecorder.isRecording() || !isConnected) return
-    
+
     const interval = setInterval(() => {
       gyroRecorder.recordGyroFrame(quaternionRef.current)
     }, 50)
-    
+
     return () => clearInterval(interval)
   }, [isConnected, gyroRecorder, quaternionRef])
 
@@ -273,7 +298,7 @@ function App() {
 
   useEffect(() => {
     handleNewScramble()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleSyncCube = useCallback(async () => {
@@ -325,7 +350,7 @@ function App() {
         connect()
       }
     }
-    
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [resetGyro, handleSyncCube, isConnected, connect])
@@ -336,7 +361,10 @@ function App() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: 'var(--theme-bg)' }}>
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ backgroundColor: 'var(--theme-bg)' }}
+    >
       <div className="flex h-full w-full max-w-7xl flex-col">
         <ConnectionModal
           isOpen={modalState.isOpen || isMacAddressRequired || !!error}
@@ -382,120 +410,113 @@ function App() {
           onConnect={connect}
           onDisconnect={disconnect}
           batteryLevel={batteryLevel}
-        onCalibrate={() => setIsCalibrationOpen(true)}
-      />
+          onCalibrate={() => setIsCalibrationOpen(true)}
+        />
 
-      <main className="flex flex-1 flex-col overflow-hidden">
-        {activeTab === 'timer' ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
-            <StatusBar 
-              solves={solves} 
-              batteryLevel={batteryLevel} 
-              isConnected={isConnected}
-              isConnecting={isConnecting}
-              onConnect={connect}
-              onOpenCubeInfo={() => setIsCubeInfoOpen(true)}
-            />
-            {timer.status === 'stopped' && lastSolveTime > 0 ? (
-              <SolveResults
-                time={lastSolveTime}
-                moves={lastMoveCount}
-                analysis={lastAnalysis}
-                onNextScramble={handleNewScramble}
-                onRepeatScramble={handleRepeatScramble}
-                onViewStats={() => {
-                  if (solves.length > 0) {
-                    setSelectedSolve(solves[0])
-                    setSolveViewMode('stats')
-                    setActiveTab('solves')
-                  }
+        <main className="flex flex-1 flex-col overflow-hidden">
+          {activeTab === 'timer' ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
+              <StatusBar
+                solves={solves}
+                batteryLevel={batteryLevel}
+                isConnected={isConnected}
+                isConnecting={isConnecting}
+                onConnect={connect}
+                onOpenCubeInfo={() => setIsCubeInfoOpen(true)}
+              />
+              {timer.status === 'stopped' && lastSolveTime > 0 ? (
+                <SolveResults
+                  time={lastSolveTime}
+                  moves={lastMoveCount}
+                  analysis={lastAnalysis}
+                  onNextScramble={handleNewScramble}
+                  onRepeatScramble={handleRepeatScramble}
+                  onViewStats={() => {
+                    if (solves.length > 0) {
+                      setSelectedSolve(solves[0])
+                      setSolveViewMode('stats')
+                      setActiveTab('solves')
+                    }
+                  }}
+                  pattern={frozenPattern}
+                  quaternionRef={quaternionRef}
+                  cubeRef={cubeRef}
+                  solve={solves.length > 0 ? solves[0] : undefined}
+                />
+              ) : (
+                <>
+                  <ScrambleNotation
+                    trackerState={scrambleState}
+                    timerStatus={timer.status}
+                    time={timer.time}
+                  />
+
+                  <div className="relative aspect-square w-full max-w-sm">
+                    {!isLoading && (
+                      <CubeViewer
+                        pattern={frozenPattern}
+                        quaternionRef={quaternionRef}
+                        cubeRef={cubeRef}
+                        config={DEFAULT_CONFIG}
+                        animationSpeed={settings.animationSpeed}
+                        cubeColors={cubeColors}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : activeTab === 'solves' ? (
+            solveViewMode === 'stats' && selectedSolve ? (
+              <SolveDetailPage
+                solve={selectedSolve}
+                onBack={() => {
+                  setSolveViewMode('results')
                 }}
-                pattern={frozenPattern}
-                quaternionRef={quaternionRef}
-                cubeRef={cubeRef}
-                solve={solves.length > 0 ? solves[0] : undefined}
+              />
+            ) : solveViewMode === 'results' && selectedSolve ? (
+              <SolveResults
+                time={selectedSolve.time}
+                moves={selectedSolve.solution.length}
+                analysis={selectedSolve.cfopAnalysis || null}
+                scramble={selectedSolve.scramble}
+                showBackButton
+                onBack={() => {
+                  setSelectedSolve(null)
+                  setSolveViewMode('list')
+                }}
+                onRepeatScramble={() => {
+                  setScramble(selectedSolve.scramble)
+                  setSelectedSolve(null)
+                  setSolveViewMode('list')
+                  setActiveTab('timer')
+                }}
+                onViewStats={() => setSolveViewMode('stats')}
+                solve={selectedSolve}
               />
             ) : (
-              <>
-                <ScrambleNotation
-                  trackerState={scrambleState}
-                  timerStatus={timer.status}
-                  time={timer.time}
-                />
-
-                <div className="relative aspect-square w-full max-w-sm">
-                  {!isLoading && (
-                    <CubeViewer
-                      pattern={frozenPattern}
-                      quaternionRef={quaternionRef}
-                      cubeRef={cubeRef}
-                      config={DEFAULT_CONFIG}
-                      animationSpeed={settings.animationSpeed}
-                      cubeColors={cubeColors}
-                    />
-                  )}
+              <div className="flex-1 overflow-auto">
+                <div className="p-4">
+                  <h2 className="mb-4 text-lg font-medium" style={{ color: 'var(--theme-text)' }}>
+                    Solve History
+                  </h2>
+                  <SolvesList
+                    solves={solves}
+                    onDelete={deleteSolve}
+                    onViewDetails={(solve) => {
+                      setSelectedSolve(solve)
+                      setSolveViewMode('results')
+                    }}
+                  />
                 </div>
-              </>
-            )}
-          </div>
-        ) : activeTab === 'solves' ? (
-          solveViewMode === 'stats' && selectedSolve ? (
-            <SolveDetailPage
-              solve={selectedSolve}
-              initialTab="stats"
-              onBack={() => {
-                setSolveViewMode('results')
-              }}
-            />
-          ) : solveViewMode === 'replay' && selectedSolve ? (
-            <SolveDetailPage
-              solve={selectedSolve}
-              initialTab="replay"
-              onBack={() => {
-                setSolveViewMode('results')
-              }}
-            />
-          ) : solveViewMode === 'results' && selectedSolve ? (
-            <SolveResults
-              time={selectedSolve.time}
-              moves={selectedSolve.solution.length}
-              analysis={selectedSolve.cfopAnalysis || null}
-              scramble={selectedSolve.scramble}
-              showBackButton
-              onBack={() => {
-                setSelectedSolve(null)
-                setSolveViewMode('list')
-              }}
-              onRepeatScramble={() => {
-                setScramble(selectedSolve.scramble)
-                setSelectedSolve(null)
-                setSolveViewMode('list')
-                setActiveTab('timer')
-              }}
-              onViewStats={() => setSolveViewMode('stats')}
-              solve={selectedSolve}
-            />
-          ) : (
-            <div className="flex-1 overflow-auto">
-              <div className="p-4">
-                <h2 className="mb-4 text-lg font-medium" style={{ color: 'var(--theme-text)' }}>Solve History</h2>
-                <SolvesList 
-                  solves={solves} 
-                  onDelete={deleteSolve} 
-                  onViewDetails={(solve) => {
-                    setSelectedSolve(solve)
-                    setSolveViewMode('results')
-                  }}
-                />
               </div>
-            </div>
-          )
-        ) : activeTab === 'simulator' ? (
-          <Simulator />
-        ) : (
-          <SettingsPanel />
-        )}
-      </main>
+            )
+          ) : activeTab === 'simulator' ? (
+            <Simulator />
+          ) : (
+            <SettingsPanel />
+          )}
+        </main>
 
         <KeyboardHints isConnected={isConnected} />
         <Footer />

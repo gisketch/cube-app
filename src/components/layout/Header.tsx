@@ -1,5 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
-import { User, Settings, FlaskConical, History, ChevronDown, Bluetooth, Battery, BatteryLow, BatteryMedium, BatteryFull, BatteryWarning, RotateCcw } from 'lucide-react'
+import {
+  User,
+  Settings,
+  FlaskConical,
+  History,
+  ChevronDown,
+  Bluetooth,
+  Battery,
+  BatteryLow,
+  BatteryMedium,
+  BatteryFull,
+  BatteryWarning,
+  RotateCcw,
+} from 'lucide-react'
 
 interface HeaderProps {
   onNavigate: (page: 'timer' | 'solves' | 'simulator' | 'settings') => void
@@ -11,14 +24,14 @@ interface HeaderProps {
   onCalibrate?: () => void
 }
 
-export function Header({ 
-  onNavigate, 
-  isConnected, 
-  isConnecting, 
-  onConnect, 
+export function Header({
+  onNavigate,
+  isConnected,
+  isConnecting,
+  onConnect,
   onDisconnect,
   batteryLevel,
-  onCalibrate
+  onCalibrate,
 }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -51,12 +64,12 @@ export function Header({
 
   return (
     <header className="flex items-center justify-between px-8 py-4">
-      <button 
+      <button
         onClick={() => onNavigate('timer')}
         className="flex items-center gap-2 text-xl font-semibold transition-colors"
         style={{ color: 'var(--theme-accent)' }}
       >
-        <div 
+        <div
           className="flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold"
           style={{ backgroundColor: 'var(--theme-accent)', color: 'var(--theme-bg)' }}
         >
@@ -65,8 +78,8 @@ export function Header({
         <span>cubeapp</span>
       </button>
 
-      <div 
-        className="relative pb-2" 
+      <div
+        className="relative pb-2"
         ref={dropdownRef}
         onMouseEnter={() => setIsDropdownOpen(true)}
         onMouseLeave={() => setIsDropdownOpen(false)}
@@ -76,28 +89,33 @@ export function Header({
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-base transition-colors"
           style={{ color: 'var(--theme-text)' }}
         >
-          <div 
+          <div
             className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{ backgroundColor: 'var(--theme-subAlt)' }}
           >
             <User className="h-4 w-4" />
           </div>
           <span>Guest</span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+          />
         </button>
 
         {isDropdownOpen && (
-          <div 
+          <div
             className="absolute right-0 top-full z-50 w-52 rounded-lg py-1 shadow-lg"
-            style={{ backgroundColor: 'var(--theme-bgSecondary)', border: '1px solid var(--theme-subAlt)' }}
+            style={{
+              backgroundColor: 'var(--theme-bgSecondary)',
+              border: '1px solid var(--theme-subAlt)',
+            }}
           >
-            <div 
+            <div
               className="mb-1 px-3 py-2 text-sm font-medium uppercase"
               style={{ color: 'var(--theme-sub)' }}
             >
               Smart Cube
             </div>
-            
+
             <button
               onClick={() => {
                 isConnected ? onDisconnect() : onConnect()
@@ -108,11 +126,13 @@ export function Header({
               style={{ color: isConnected ? '#4ade80' : 'var(--theme-text)' }}
             >
               <Bluetooth className={`h-4 w-4 ${isConnecting ? 'animate-pulse' : ''}`} />
-              <span>{isConnected ? 'Disconnect' : isConnecting ? 'Connecting...' : 'Connect Cube'}</span>
+              <span>
+                {isConnected ? 'Disconnect' : isConnecting ? 'Connecting...' : 'Connect Cube'}
+              </span>
             </button>
 
             {isConnected && batteryLevel !== null && (
-              <div 
+              <div
                 className="flex items-center gap-3 px-3 py-2 text-base"
                 style={{ color: batteryLevel <= 20 ? 'var(--theme-error)' : 'var(--theme-sub)' }}
               >
@@ -135,12 +155,9 @@ export function Header({
               </button>
             )}
 
-            <div 
-              className="my-1 h-px"
-              style={{ backgroundColor: 'var(--theme-subAlt)' }}
-            />
+            <div className="my-1 h-px" style={{ backgroundColor: 'var(--theme-subAlt)' }} />
 
-            <div 
+            <div
               className="mb-1 px-3 py-2 text-sm font-medium uppercase"
               style={{ color: 'var(--theme-sub)' }}
             >

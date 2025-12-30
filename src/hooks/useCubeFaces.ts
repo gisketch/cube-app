@@ -1,17 +1,20 @@
 import { useState, useCallback, useRef } from 'react'
-import { 
-  type CubeFaces, 
+import {
+  type CubeFaces,
   type Color,
-  createSolvedCube, 
-  applyMove, 
+  createSolvedCube,
+  applyMove,
   cloneCube,
-  isSolved 
+  isSolved,
 } from '@/lib/cube-faces'
 
 export type { CubeFaces, Color }
 
 function parseAlgorithm(alg: string): string[] {
-  return alg.trim().split(/\s+/).filter((m) => m.length > 0)
+  return alg
+    .trim()
+    .split(/\s+/)
+    .filter((m) => m.length > 0)
 }
 
 export function useCubeFaces() {
@@ -55,7 +58,7 @@ export function useCubeFaces() {
   const getHistory = useCallback(() => {
     return {
       moves: [...moveHistoryRef.current],
-      states: stateHistoryRef.current.map(cloneCube)
+      states: stateHistoryRef.current.map(cloneCube),
     }
   }, [])
 

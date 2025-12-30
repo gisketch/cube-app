@@ -241,7 +241,11 @@ function Cubie({ position, colors, pieceType, coords, materialConfig }: CubiePro
           }
         >
           <mesh geometry={centerBodyGeometry!}>
-            <meshStandardMaterial color={INNER_COLOR} roughness={inner.roughness} metalness={inner.metalness} />
+            <meshStandardMaterial
+              color={INNER_COLOR}
+              roughness={inner.roughness}
+              metalness={inner.metalness}
+            />
           </mesh>
         </group>
       ) : (
@@ -250,7 +254,11 @@ function Cubie({ position, colors, pieceType, coords, materialConfig }: CubiePro
           radius={0.08}
           smoothness={4}
         >
-          <meshStandardMaterial color={INNER_COLOR} roughness={inner.roughness} metalness={inner.metalness} />
+          <meshStandardMaterial
+            color={INNER_COLOR}
+            roughness={inner.roughness}
+            metalness={inner.metalness}
+          />
         </RoundedBox>
       )}
 
@@ -325,7 +333,12 @@ function getPieceType(x: number, y: number, z: number): PieceType {
   return 'center'
 }
 
-function getDefaultColors(x: number, y: number, z: number, cubeColors: CubeColors): CubieProps['colors'] {
+function getDefaultColors(
+  x: number,
+  y: number,
+  z: number,
+  cubeColors: CubeColors,
+): CubieProps['colors'] {
   const colors: CubieProps['colors'] = {}
   if (y === 1) colors.top = cubeColors.white
   if (y === -1) colors.bottom = cubeColors.yellow
@@ -412,205 +425,220 @@ interface RubiksCubeProps {
 }
 
 export const RubiksCube = memo(
-  forwardRef<RubiksCubeRef, RubiksCubeProps>(({ quaternionRef, pattern, facelets: faceletsProp, materialConfig, animationSpeed = 15, cubeColors = DEFAULT_CUBE_COLORS }, ref) => {
-    const config = materialConfig ?? DEFAULT_CONFIG.material
-    const groupRef = useRef<THREE.Group>(null)
-    const animationQueue = useRef<{ axis: 'x' | 'y' | 'z'; layer: number; angle: number }[]>([])
-    const currentAnimation = useRef<{
-      axis: 'x' | 'y' | 'z'
-      layer: number
-      targetAngle: number
-      currentAngle: number
-      cubies: THREE.Object3D[]
-    } | null>(null)
-
-    useFrame((_, delta) => {
-      if (groupRef.current && quaternionRef?.current) {
-        groupRef.current.quaternion.slerp(quaternionRef.current, 15 * delta)
-      }
-    })
-
-    useImperativeHandle(ref, () => ({
-      performMove: (move: string) => {
-        const cleanMove = move.trim()
-        const moveMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; angle: number }> = {
-          U: { axis: 'y', layer: 1, angle: -Math.PI / 2 },
-          "U'": { axis: 'y', layer: 1, angle: Math.PI / 2 },
-          U2: { axis: 'y', layer: 1, angle: -Math.PI },
-          "U2'": { axis: 'y', layer: 1, angle: Math.PI },
-          D: { axis: 'y', layer: -1, angle: Math.PI / 2 },
-          "D'": { axis: 'y', layer: -1, angle: -Math.PI / 2 },
-          D2: { axis: 'y', layer: -1, angle: Math.PI },
-          "D2'": { axis: 'y', layer: -1, angle: -Math.PI },
-          L: { axis: 'x', layer: -1, angle: Math.PI / 2 },
-          "L'": { axis: 'x', layer: -1, angle: -Math.PI / 2 },
-          L2: { axis: 'x', layer: -1, angle: Math.PI },
-          "L2'": { axis: 'x', layer: -1, angle: -Math.PI },
-          R: { axis: 'x', layer: 1, angle: -Math.PI / 2 },
-          "R'": { axis: 'x', layer: 1, angle: Math.PI / 2 },
-          R2: { axis: 'x', layer: 1, angle: -Math.PI },
-          "R2'": { axis: 'x', layer: 1, angle: Math.PI },
-          F: { axis: 'z', layer: 1, angle: -Math.PI / 2 },
-          "F'": { axis: 'z', layer: 1, angle: Math.PI / 2 },
-          F2: { axis: 'z', layer: 1, angle: -Math.PI },
-          "F2'": { axis: 'z', layer: 1, angle: Math.PI },
-          B: { axis: 'z', layer: -1, angle: Math.PI / 2 },
-          "B'": { axis: 'z', layer: -1, angle: -Math.PI / 2 },
-          B2: { axis: 'z', layer: -1, angle: Math.PI },
-          "B2'": { axis: 'z', layer: -1, angle: -Math.PI },
-        }
-
-        if (moveMap[cleanMove]) {
-          animationQueue.current.push(moveMap[cleanMove])
-        }
+  forwardRef<RubiksCubeRef, RubiksCubeProps>(
+    (
+      {
+        quaternionRef,
+        pattern,
+        facelets: faceletsProp,
+        materialConfig,
+        animationSpeed = 15,
+        cubeColors = DEFAULT_CUBE_COLORS,
       },
-      reset: () => {
-        animationQueue.current = []
-        currentAnimation.current = null
-        
-        if (groupRef.current) {
-          let idx = 0
-          for (let x = -1; x <= 1; x++) {
-            for (let y = -1; y <= 1; y++) {
-              for (let z = -1; z <= 1; z++) {
-                if (x === 0 && y === 0 && z === 0) continue
-                const child = groupRef.current.children[idx]
-                if (child) {
-                  child.position.set(x * OFFSET, y * OFFSET, z * OFFSET)
-                  child.quaternion.identity()
-                  child.updateMatrix()
+      ref,
+    ) => {
+      const config = materialConfig ?? DEFAULT_CONFIG.material
+      const groupRef = useRef<THREE.Group>(null)
+      const animationQueue = useRef<{ axis: 'x' | 'y' | 'z'; layer: number; angle: number }[]>([])
+      const currentAnimation = useRef<{
+        axis: 'x' | 'y' | 'z'
+        layer: number
+        targetAngle: number
+        currentAngle: number
+        cubies: THREE.Object3D[]
+      } | null>(null)
+
+      useFrame((_, delta) => {
+        if (groupRef.current && quaternionRef?.current) {
+          groupRef.current.quaternion.slerp(quaternionRef.current, 15 * delta)
+        }
+      })
+
+      useImperativeHandle(ref, () => ({
+        performMove: (move: string) => {
+          const cleanMove = move.trim()
+          const moveMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; angle: number }> = {
+            U: { axis: 'y', layer: 1, angle: -Math.PI / 2 },
+            "U'": { axis: 'y', layer: 1, angle: Math.PI / 2 },
+            U2: { axis: 'y', layer: 1, angle: -Math.PI },
+            "U2'": { axis: 'y', layer: 1, angle: Math.PI },
+            D: { axis: 'y', layer: -1, angle: Math.PI / 2 },
+            "D'": { axis: 'y', layer: -1, angle: -Math.PI / 2 },
+            D2: { axis: 'y', layer: -1, angle: Math.PI },
+            "D2'": { axis: 'y', layer: -1, angle: -Math.PI },
+            L: { axis: 'x', layer: -1, angle: Math.PI / 2 },
+            "L'": { axis: 'x', layer: -1, angle: -Math.PI / 2 },
+            L2: { axis: 'x', layer: -1, angle: Math.PI },
+            "L2'": { axis: 'x', layer: -1, angle: -Math.PI },
+            R: { axis: 'x', layer: 1, angle: -Math.PI / 2 },
+            "R'": { axis: 'x', layer: 1, angle: Math.PI / 2 },
+            R2: { axis: 'x', layer: 1, angle: -Math.PI },
+            "R2'": { axis: 'x', layer: 1, angle: Math.PI },
+            F: { axis: 'z', layer: 1, angle: -Math.PI / 2 },
+            "F'": { axis: 'z', layer: 1, angle: Math.PI / 2 },
+            F2: { axis: 'z', layer: 1, angle: -Math.PI },
+            "F2'": { axis: 'z', layer: 1, angle: Math.PI },
+            B: { axis: 'z', layer: -1, angle: Math.PI / 2 },
+            "B'": { axis: 'z', layer: -1, angle: -Math.PI / 2 },
+            B2: { axis: 'z', layer: -1, angle: Math.PI },
+            "B2'": { axis: 'z', layer: -1, angle: -Math.PI },
+          }
+
+          if (moveMap[cleanMove]) {
+            animationQueue.current.push(moveMap[cleanMove])
+          }
+        },
+        reset: () => {
+          animationQueue.current = []
+          currentAnimation.current = null
+
+          if (groupRef.current) {
+            let idx = 0
+            for (let x = -1; x <= 1; x++) {
+              for (let y = -1; y <= 1; y++) {
+                for (let z = -1; z <= 1; z++) {
+                  if (x === 0 && y === 0 && z === 0) continue
+                  const child = groupRef.current.children[idx]
+                  if (child) {
+                    child.position.set(x * OFFSET, y * OFFSET, z * OFFSET)
+                    child.quaternion.identity()
+                    child.updateMatrix()
+                  }
+                  idx++
                 }
-                idx++
               }
             }
           }
-        }
-      },
-    }))
+        },
+      }))
 
-    useFrame((_, delta) => {
-      if (!groupRef.current) return
+      useFrame((_, delta) => {
+        if (!groupRef.current) return
 
-      if (!currentAnimation.current && animationQueue.current.length > 0) {
-        const nextMove = animationQueue.current.shift()!
-        const targetCubies: THREE.Object3D[] = []
+        if (!currentAnimation.current && animationQueue.current.length > 0) {
+          const nextMove = animationQueue.current.shift()!
+          const targetCubies: THREE.Object3D[] = []
 
-        groupRef.current.children.forEach((child) => {
-          const x = child.position.x / OFFSET
-          const y = child.position.y / OFFSET
-          const z = child.position.z / OFFSET
+          groupRef.current.children.forEach((child) => {
+            const x = child.position.x / OFFSET
+            const y = child.position.y / OFFSET
+            const z = child.position.z / OFFSET
 
-          if (nextMove.axis === 'x' && Math.abs(x - nextMove.layer) < 0.1) targetCubies.push(child)
-          if (nextMove.axis === 'y' && Math.abs(y - nextMove.layer) < 0.1) targetCubies.push(child)
-          if (nextMove.axis === 'z' && Math.abs(z - nextMove.layer) < 0.1) targetCubies.push(child)
-        })
-
-        currentAnimation.current = {
-          ...nextMove,
-          currentAngle: 0,
-          targetAngle: nextMove.angle,
-          cubies: targetCubies,
-        }
-      }
-
-      if (currentAnimation.current) {
-        const anim = currentAnimation.current
-        const speed = animationSpeed
-        const step = anim.targetAngle > 0 ? speed * delta : -speed * delta
-
-        let finished = false
-        let rotationStep = step
-
-        if (
-          (anim.targetAngle > 0 && anim.currentAngle + step >= anim.targetAngle) ||
-          (anim.targetAngle < 0 && anim.currentAngle + step <= anim.targetAngle)
-        ) {
-          rotationStep = anim.targetAngle - anim.currentAngle
-          finished = true
-        }
-
-        const axisVector = new THREE.Vector3(
-          anim.axis === 'x' ? 1 : 0,
-          anim.axis === 'y' ? 1 : 0,
-          anim.axis === 'z' ? 1 : 0,
-        )
-
-        const rotQuat = new THREE.Quaternion().setFromAxisAngle(axisVector, rotationStep)
-
-        anim.cubies.forEach((cubie) => {
-          cubie.position.applyAxisAngle(axisVector, rotationStep)
-          cubie.quaternion.premultiply(rotQuat)
-        })
-
-        anim.currentAngle += rotationStep
-
-        if (finished) {
-          anim.cubies.forEach((cubie) => {
-            cubie.position.x = Math.round(cubie.position.x / OFFSET) * OFFSET
-            cubie.position.y = Math.round(cubie.position.y / OFFSET) * OFFSET
-            cubie.position.z = Math.round(cubie.position.z / OFFSET) * OFFSET
-            cubie.updateMatrix()
+            if (nextMove.axis === 'x' && Math.abs(x - nextMove.layer) < 0.1)
+              targetCubies.push(child)
+            if (nextMove.axis === 'y' && Math.abs(y - nextMove.layer) < 0.1)
+              targetCubies.push(child)
+            if (nextMove.axis === 'z' && Math.abs(z - nextMove.layer) < 0.1)
+              targetCubies.push(child)
           })
-          currentAnimation.current = null
-        }
-      }
-    })
 
-    const facelets = useMemo(() => {
-      if (faceletsProp) {
-        return patternToFacelets(null as unknown as KPattern, faceletsProp)
-      }
-      if (pattern) {
-        return patternToFacelets(pattern)
-      }
-      return null
-    }, [pattern, faceletsProp])
-
-    const cubies = useMemo(() => {
-      const result: {
-        key: string
-        position: [number, number, number]
-        colors: CubieProps['colors']
-        pieceType: PieceType
-        coords: { x: number; y: number; z: number }
-      }[] = []
-
-      for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-          for (let z = -1; z <= 1; z++) {
-            if (x === 0 && y === 0 && z === 0) continue
-
-            const colors = facelets
-              ? getColorsFromPattern(x, y, z, facelets)
-              : getDefaultColors(x, y, z, cubeColors)
-
-            result.push({
-              key: `${x},${y},${z}`,
-              position: [x * OFFSET, y * OFFSET, z * OFFSET],
-              colors,
-              pieceType: getPieceType(x, y, z),
-              coords: { x, y, z },
-            })
+          currentAnimation.current = {
+            ...nextMove,
+            currentAngle: 0,
+            targetAngle: nextMove.angle,
+            cubies: targetCubies,
           }
         }
-      }
 
-      return result
-    }, [facelets, cubeColors])
+        if (currentAnimation.current) {
+          const anim = currentAnimation.current
+          const speed = animationSpeed
+          const step = anim.targetAngle > 0 ? speed * delta : -speed * delta
 
-    return (
-      <group ref={groupRef}>
-        {cubies.map((cubie) => (
-          <Cubie
-            key={cubie.key}
-            position={cubie.position}
-            colors={cubie.colors}
-            pieceType={cubie.pieceType}
-            coords={cubie.coords}
-            materialConfig={config}
-          />
-        ))}
-      </group>
-    )
-  }),
+          let finished = false
+          let rotationStep = step
+
+          if (
+            (anim.targetAngle > 0 && anim.currentAngle + step >= anim.targetAngle) ||
+            (anim.targetAngle < 0 && anim.currentAngle + step <= anim.targetAngle)
+          ) {
+            rotationStep = anim.targetAngle - anim.currentAngle
+            finished = true
+          }
+
+          const axisVector = new THREE.Vector3(
+            anim.axis === 'x' ? 1 : 0,
+            anim.axis === 'y' ? 1 : 0,
+            anim.axis === 'z' ? 1 : 0,
+          )
+
+          const rotQuat = new THREE.Quaternion().setFromAxisAngle(axisVector, rotationStep)
+
+          anim.cubies.forEach((cubie) => {
+            cubie.position.applyAxisAngle(axisVector, rotationStep)
+            cubie.quaternion.premultiply(rotQuat)
+          })
+
+          anim.currentAngle += rotationStep
+
+          if (finished) {
+            anim.cubies.forEach((cubie) => {
+              cubie.position.x = Math.round(cubie.position.x / OFFSET) * OFFSET
+              cubie.position.y = Math.round(cubie.position.y / OFFSET) * OFFSET
+              cubie.position.z = Math.round(cubie.position.z / OFFSET) * OFFSET
+              cubie.updateMatrix()
+            })
+            currentAnimation.current = null
+          }
+        }
+      })
+
+      const facelets = useMemo(() => {
+        if (faceletsProp) {
+          return patternToFacelets(null as unknown as KPattern, faceletsProp)
+        }
+        if (pattern) {
+          return patternToFacelets(pattern)
+        }
+        return null
+      }, [pattern, faceletsProp])
+
+      const cubies = useMemo(() => {
+        const result: {
+          key: string
+          position: [number, number, number]
+          colors: CubieProps['colors']
+          pieceType: PieceType
+          coords: { x: number; y: number; z: number }
+        }[] = []
+
+        for (let x = -1; x <= 1; x++) {
+          for (let y = -1; y <= 1; y++) {
+            for (let z = -1; z <= 1; z++) {
+              if (x === 0 && y === 0 && z === 0) continue
+
+              const colors = facelets
+                ? getColorsFromPattern(x, y, z, facelets)
+                : getDefaultColors(x, y, z, cubeColors)
+
+              result.push({
+                key: `${x},${y},${z}`,
+                position: [x * OFFSET, y * OFFSET, z * OFFSET],
+                colors,
+                pieceType: getPieceType(x, y, z),
+                coords: { x, y, z },
+              })
+            }
+          }
+        }
+
+        return result
+      }, [facelets, cubeColors])
+
+      return (
+        <group ref={groupRef}>
+          {cubies.map((cubie) => (
+            <Cubie
+              key={cubie.key}
+              position={cubie.position}
+              colors={cubie.colors}
+              pieceType={cubie.pieceType}
+              coords={cubie.coords}
+              materialConfig={config}
+            />
+          ))}
+        </group>
+      )
+    },
+  ),
 )

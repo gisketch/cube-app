@@ -20,7 +20,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
         }
       }
     },
-    [shortcuts]
+    [shortcuts],
   )
 
   useEffect(() => {

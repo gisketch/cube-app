@@ -1,4 +1,12 @@
-import { Timer, ListOrdered, Bluetooth, RefreshCw, Settings2, FlaskConical, Settings } from 'lucide-react'
+import {
+  Timer,
+  ListOrdered,
+  Bluetooth,
+  RefreshCw,
+  Settings2,
+  FlaskConical,
+  Settings,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type TabType = 'timer' | 'solves' | 'simulator' | 'settings'
@@ -32,18 +40,20 @@ export function Sidebar({
   ]
 
   return (
-    <aside 
+    <aside
       className="fixed left-0 top-0 z-40 flex h-full w-16 flex-col items-center py-4"
-      style={{ 
+      style={{
         backgroundColor: 'var(--theme-bgSecondary)',
-        borderRight: '1px solid var(--theme-subAlt)'
+        borderRight: '1px solid var(--theme-subAlt)',
       }}
     >
-      <div 
+      <div
         className="mb-8 flex h-10 w-10 items-center justify-center rounded-lg"
         style={{ backgroundColor: 'var(--theme-accent)' }}
       >
-        <span className="text-lg font-bold" style={{ color: 'var(--theme-bg)' }}>C</span>
+        <span className="text-lg font-bold" style={{ color: 'var(--theme-bg)' }}>
+          C
+        </span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-2">
@@ -65,7 +75,7 @@ export function Sidebar({
             >
               <Icon className="h-5 w-5" />
               {isActive && (
-                <div 
+                <div
                   className="absolute left-0 h-6 w-1 rounded-r-full"
                   style={{ backgroundColor: 'var(--theme-accent)' }}
                 />
@@ -111,10 +121,14 @@ export function Sidebar({
                 ? 'animate-pulse bg-blue-500/20 text-blue-400'
                 : '',
           )}
-          style={!isConnected && !isConnecting ? { 
-            backgroundColor: 'var(--theme-subAlt)', 
-            color: 'var(--theme-sub)' 
-          } : undefined}
+          style={
+            !isConnected && !isConnecting
+              ? {
+                  backgroundColor: 'var(--theme-subAlt)',
+                  color: 'var(--theme-sub)',
+                }
+              : undefined
+          }
           title={isConnected ? 'Disconnect Cube' : isConnecting ? 'Connecting...' : 'Connect Cube'}
         >
           <Bluetooth className="h-4 w-4" />

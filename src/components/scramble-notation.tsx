@@ -1,6 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatTime } from '@/lib/format'
-import type { ScrambleTrackerState, ScrambleMoveState, ParsedMove } from '@/hooks/useScrambleTracker'
+import type {
+  ScrambleTrackerState,
+  ScrambleMoveState,
+  ParsedMove,
+} from '@/hooks/useScrambleTracker'
 
 interface ScrambleNotationProps {
   trackerState: ScrambleTrackerState
@@ -31,10 +35,10 @@ function MoveNotation({
     <motion.span
       layout
       initial={{ opacity: 0.6, scale: 1 }}
-      animate={{ 
+      animate={{
         opacity: isCurrent || isRecovery ? 1 : isCompleted ? 0.6 : 0.7,
         scale: isCurrent || isRecovery ? 1.15 : 1,
-        color: getColor()
+        color: getColor(),
       }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       className={`inline-block ${isCurrent || isRecovery ? 'font-bold' : isPending ? 'font-normal' : 'font-medium'}`}
@@ -49,11 +53,11 @@ function RecoveryMoveNotation({ move }: { move: ParsedMove }) {
     <motion.span
       layout
       initial={{ opacity: 0, scale: 0.8, x: -10 }}
-      animate={{ 
+      animate={{
         opacity: 1,
         scale: 1.15,
         x: 0,
-        color: 'var(--theme-error, #ef4444)'
+        color: 'var(--theme-error, #ef4444)',
       }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -118,10 +122,7 @@ export function ScrambleNotation({ trackerState, timerStatus, time }: ScrambleNo
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="flex items-center gap-2"
                 >
-                  <span 
-                    className="text-sm"
-                    style={{ color: 'var(--theme-error, #ef4444)' }}
-                  >
+                  <span className="text-sm" style={{ color: 'var(--theme-error, #ef4444)' }}>
                     undo:
                   </span>
                   <div className="flex gap-2 text-xl">

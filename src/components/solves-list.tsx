@@ -22,7 +22,10 @@ function formatTime(ms: number): string {
 }
 
 function getScrambledState(scramble: string): CubeFaces {
-  const moves = scramble.trim().split(/\s+/).filter((m) => m.length > 0)
+  const moves = scramble
+    .trim()
+    .split(/\s+/)
+    .filter((m) => m.length > 0)
   let cube = createSolvedCube()
   for (const move of moves) {
     cube = applyMove(cube, move)
@@ -89,18 +92,12 @@ function SolveRow({
         <MiniFace face={scrambledState.F} />
       </td>
       <td className="px-4 py-3" style={{ width: 100 }}>
-        <span
-          className="font-mono text-lg font-semibold"
-          style={{ color: 'var(--theme-text)' }}
-        >
+        <span className="font-mono text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>
           {formatTime(solve.time)}
         </span>
       </td>
       <td className="px-4 py-3">
-        <span
-          className="line-clamp-1 font-mono text-xs"
-          style={{ color: 'var(--theme-sub)' }}
-        >
+        <span className="line-clamp-1 font-mono text-xs" style={{ color: 'var(--theme-sub)' }}>
           {solve.scramble}
         </span>
       </td>
@@ -176,9 +173,7 @@ export function SolvesList({ solves, onDelete, onViewDetails }: SolvesListProps)
             <th
               className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
               style={{ color: 'var(--theme-sub)', width: 45 }}
-            >
-              
-            </th>
+            ></th>
             <th
               className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
               style={{ color: 'var(--theme-sub)', width: 100 }}

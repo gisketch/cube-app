@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  RotateCcw, 
-  Box, 
-  Bluetooth, 
-  History, 
-  Settings,
-  Search
-} from 'lucide-react'
+import { RotateCcw, Box, Bluetooth, History, Settings, Search } from 'lucide-react'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -97,7 +90,7 @@ export function CommandPalette({
     ? commands.filter(
         (cmd) =>
           cmd.label.toLowerCase().includes(query.toLowerCase()) ||
-          cmd.keywords.some((kw) => kw.toLowerCase().includes(query.toLowerCase()))
+          cmd.keywords.some((kw) => kw.toLowerCase().includes(query.toLowerCase())),
       )
     : commands
 
@@ -131,7 +124,7 @@ export function CommandPalette({
         onClose()
       }
     },
-    [filteredCommands, selectedIndex, onClose]
+    [filteredCommands, selectedIndex, onClose],
   )
 
   return (
@@ -146,19 +139,19 @@ export function CommandPalette({
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
             onClick={onClose}
           />
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="w-full max-w-lg overflow-hidden rounded-lg shadow-2xl pointer-events-auto"
-              style={{ 
+              className="pointer-events-auto w-full max-w-lg overflow-hidden rounded-lg shadow-2xl"
+              style={{
                 backgroundColor: 'var(--theme-bgSecondary)',
-                border: '1px solid var(--theme-subAlt)'
+                border: '1px solid var(--theme-subAlt)',
               }}
             >
-              <div 
+              <div
                 className="flex items-center gap-3 px-4 py-3"
                 style={{ borderBottom: '1px solid var(--theme-subAlt)' }}
               >
@@ -177,7 +170,7 @@ export function CommandPalette({
 
               <div className="max-h-80 overflow-y-auto py-2">
                 {filteredCommands.length === 0 ? (
-                  <div 
+                  <div
                     className="px-4 py-8 text-center text-sm"
                     style={{ color: 'var(--theme-sub)' }}
                   >
@@ -193,14 +186,14 @@ export function CommandPalette({
                         onClick={cmd.action}
                         onMouseEnter={() => setSelectedIndex(index)}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors"
-                        style={{ 
+                        style={{
                           backgroundColor: isSelected ? 'var(--theme-subAlt)' : 'transparent',
-                          color: 'var(--theme-text)'
+                          color: 'var(--theme-text)',
                         }}
                       >
-                        <Icon 
-                          className="h-4 w-4" 
-                          style={{ color: isSelected ? 'var(--theme-accent)' : 'var(--theme-sub)' }} 
+                        <Icon
+                          className="h-4 w-4"
+                          style={{ color: isSelected ? 'var(--theme-accent)' : 'var(--theme-sub)' }}
                         />
                         <span>{cmd.label}</span>
                       </button>

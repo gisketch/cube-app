@@ -41,13 +41,15 @@ export function CalibrationModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
-            style={{ 
+            style={{
               backgroundColor: 'var(--theme-bgSecondary)',
-              border: '1px solid var(--theme-subAlt)'
+              border: '1px solid var(--theme-subAlt)',
             }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>Cube Calibration</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>
+                Cube Calibration
+              </h2>
               <button
                 onClick={onClose}
                 className="rounded-lg p-1.5 transition-colors"
@@ -57,7 +59,7 @@ export function CalibrationModal({
               </button>
             </div>
 
-            <div 
+            <div
               className="mb-6 aspect-square w-full overflow-hidden rounded-xl"
               style={{ backgroundColor: 'var(--theme-bg)' }}
             >
@@ -69,9 +71,9 @@ export function CalibrationModal({
                 onClick={onSyncCube}
                 disabled={!isConnected}
                 className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ 
+                style={{
                   backgroundColor: 'var(--theme-accent)',
-                  color: 'var(--theme-bg)'
+                  color: 'var(--theme-bg)',
                 }}
               >
                 <RefreshCw className="h-5 w-5" />
@@ -87,9 +89,9 @@ export function CalibrationModal({
                 onClick={onRecalibrateGyro}
                 disabled={!isConnected}
                 className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ 
+                style={{
                   backgroundColor: 'var(--theme-subAlt)',
-                  color: 'var(--theme-text)'
+                  color: 'var(--theme-text)',
                 }}
               >
                 <RotateCcw className="h-5 w-5" />

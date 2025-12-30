@@ -51,9 +51,12 @@ export function useSettings() {
     applyTheme(settings.theme)
   }, [settings.theme])
 
-  const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }))
-  }, [])
+  const updateSetting = useCallback(
+    <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+      setSettings((prev) => ({ ...prev, [key]: value }))
+    },
+    [],
+  )
 
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SETTINGS)

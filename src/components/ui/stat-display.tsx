@@ -15,7 +15,13 @@ const SIZE_MAP = {
   lg: { label: 'text-base', value: 'text-6xl', subtext: 'text-base' },
 }
 
-export function StatDisplay({ label, value, subtext, size = 'md', animate = true }: StatDisplayProps) {
+export function StatDisplay({
+  label,
+  value,
+  subtext,
+  size = 'md',
+  animate = true,
+}: StatDisplayProps) {
   const sizes = SIZE_MAP[size]
 
   const content = (
@@ -49,9 +55,5 @@ interface StatRowProps {
 }
 
 export function StatRow({ children, className = '' }: StatRowProps) {
-  return (
-    <div className={`flex items-center justify-between gap-4 ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`flex items-center justify-between gap-4 ${className}`}>{children}</div>
 }

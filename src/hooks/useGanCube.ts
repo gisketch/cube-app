@@ -163,7 +163,7 @@ export function useGanCube(onMove?: (move: string) => void) {
     // This means current raw should map to identity (no rotation)
     // offset = raw.inverse()
     gyroOffsetRef.current.copy(rawQuaternionRef.current).invert()
-    
+
     // Reset the displayed quaternion to identity immediately
     quaternionRef.current.set(0, 0, 0, 1)
   }, [])

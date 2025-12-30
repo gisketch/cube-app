@@ -29,7 +29,15 @@ interface CubeViewerProps {
   cubeColors?: CubeColors
 }
 
-export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config = DEFAULT_CONFIG, animationSpeed, cubeColors }: CubeViewerProps) {
+export function CubeViewer({
+  pattern,
+  facelets,
+  quaternionRef,
+  cubeRef,
+  config = DEFAULT_CONFIG,
+  animationSpeed,
+  cubeColors,
+}: CubeViewerProps) {
   const internalRef = useRef<RubiksCubeRef>(null)
   const ref = cubeRef || internalRef
 
@@ -47,7 +55,15 @@ export function CubeViewer({ pattern, facelets, quaternionRef, cubeRef, config =
           intensity={config.light.directional2.intensity}
         />
         <group scale={config.cube.scale}>
-          <RubiksCube ref={ref} quaternionRef={quaternionRef} pattern={pattern} facelets={facelets} materialConfig={config.material} animationSpeed={animationSpeed} cubeColors={cubeColors} />
+          <RubiksCube
+            ref={ref}
+            quaternionRef={quaternionRef}
+            pattern={pattern}
+            facelets={facelets}
+            materialConfig={config.material}
+            animationSpeed={animationSpeed}
+            cubeColors={cubeColors}
+          />
         </group>
         <OrbitControls
           enablePan={false}

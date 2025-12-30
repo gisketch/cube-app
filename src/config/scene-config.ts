@@ -40,7 +40,17 @@ export interface CubeConfig {
 }
 
 export interface EnvironmentConfig {
-  preset: 'apartment' | 'city' | 'dawn' | 'forest' | 'lobby' | 'night' | 'park' | 'studio' | 'sunset' | 'warehouse'
+  preset:
+    | 'apartment'
+    | 'city'
+    | 'dawn'
+    | 'forest'
+    | 'lobby'
+    | 'night'
+    | 'park'
+    | 'studio'
+    | 'sunset'
+    | 'warehouse'
 }
 
 export interface SceneConfig {

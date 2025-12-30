@@ -70,7 +70,7 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
   const shouldReset = status === 'diverged' && divergedMoves.length > 10
   const lastScrambleRef = useRef<string>('')
   const isFirstRender = lastScrambleRef.current !== originalScramble
-  
+
   useEffect(() => {
     if (originalScramble) {
       lastScrambleRef.current = originalScramble
@@ -80,7 +80,7 @@ export function ScrambleDisplay({ trackerState, onNewScramble, isLoading }: Scra
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-center gap-3">
-        <span 
+        <span
           className="text-xs font-medium uppercase tracking-wider"
           style={{ color: 'var(--theme-sub)' }}
         >

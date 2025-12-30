@@ -51,22 +51,25 @@ function isRotation(move: string): boolean {
   return ['x', 'y', 'z'].includes(base.toLowerCase())
 }
 
-function calculateInstantTPS(moveTimings: MoveFrame[], windowMs: number = TPS_WINDOW): TPSDataPoint[] {
+function calculateInstantTPS(
+  moveTimings: MoveFrame[],
+  windowMs: number = TPS_WINDOW,
+): TPSDataPoint[] {
   if (moveTimings.length < 2) return []
-  
+
   const points: TPSDataPoint[] = []
   const totalDuration = moveTimings[moveTimings.length - 1].time
-  
+
   for (let t = 0; t <= totalDuration; t += 100) {
     const windowStart = Math.max(0, t - windowMs / 2)
     const windowEnd = t + windowMs / 2
-    
-    const movesInWindow = moveTimings.filter(m => m.time >= windowStart && m.time <= windowEnd)
+
+    const movesInWindow = moveTimings.filter((m) => m.time >= windowStart && m.time <= windowEnd)
     const tps = movesInWindow.length / (windowMs / 1000)
-    
+
     points.push({ time: t, tps, phase: '' })
   }
-  
+
   return points
 }
 
@@ -74,7 +77,7 @@ function calculatePhaseStats(
   phaseName: string,
   moves: string[],
   moveTimings: MoveFrame[],
-  phaseStartIdx: number
+  phaseStartIdx: number,
 ): PhaseStats {
   if (moves.length === 0) {
     return {
@@ -92,7 +95,7 @@ function calculatePhaseStats(
 
   const phaseEndIdx = phaseStartIdx + moves.length - 1
   const phaseMoveTimings = moveTimings.slice(phaseStartIdx, phaseEndIdx + 1)
-  
+
   if (phaseMoveTimings.length === 0) {
     return {
       name: phaseName,
@@ -111,7 +114,7 @@ function calculatePhaseStats(
   const endTime = phaseMoveTimings[phaseMoveTimings.length - 1]?.time ?? 0
   const duration = endTime - startTime
 
-  const prevMoveTime = phaseStartIdx > 0 ? moveTimings[phaseStartIdx - 1]?.time ?? 0 : 0
+  const prevMoveTime = phaseStartIdx > 0 ? (moveTimings[phaseStartIdx - 1]?.time ?? 0) : 0
   const recognitionTime = startTime - prevMoveTime
 
   let pauseTime = 0
@@ -123,7 +126,7 @@ function calculatePhaseStats(
   }
   const executionTime = duration - pauseTime
 
-  const tps = duration > 0 ? (moves.length / (duration / 1000)) : 0
+  const tps = duration > 0 ? moves.length / (duration / 1000) : 0
 
   return {
     name: phaseName,
@@ -181,7 +184,9 @@ export function calculateSolveStats(solve: Solve): SolveStats | null {
   phases.push(pllStats)
 
   const crossTime = crossStats.duration + crossStats.recognitionTime
-  const f2lTime = phases.filter(p => p.name.startsWith('F2L')).reduce((sum, p) => sum + p.duration + p.recognitionTime, 0)
+  const f2lTime = phases
+    .filter((p) => p.name.startsWith('F2L'))
+    .reduce((sum, p) => sum + p.duration + p.recognitionTime, 0)
   const ollTime = ollStats.duration + ollStats.recognitionTime
   const pllTime = pllStats.duration + pllStats.recognitionTime
   const totalPhaseTime = crossTime + f2lTime + ollTime + pllTime

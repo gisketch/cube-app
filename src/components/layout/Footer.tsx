@@ -4,11 +4,11 @@ const VERSION = '0.1.0'
 
 export function Footer() {
   return (
-    <footer 
+    <footer
       className="flex items-center justify-between px-6 py-3 text-sm"
-      style={{ 
+      style={{
         color: 'var(--theme-sub)',
-        borderTop: '1px solid var(--theme-sub-alt)'
+        borderTop: '1px solid var(--theme-sub-alt)',
       }}
     >
       <div className="flex items-center gap-6">
@@ -25,17 +25,17 @@ export function Footer() {
   )
 }
 
-function FooterLink({ 
-  icon: Icon, 
-  label, 
-  href 
-}: { 
+function FooterLink({
+  icon: Icon,
+  label,
+  href,
+}: {
   icon: typeof Mail
   label: string
-  href: string 
+  href: string
 }) {
   return (
-    <a 
+    <a
       href={href}
       className="flex items-center gap-1.5 transition-colors hover:opacity-80"
       style={{ color: 'var(--theme-sub)' }}

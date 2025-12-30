@@ -1,6 +1,15 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Timer, Trophy, Battery, BatteryWarning, Bluetooth, Boxes, ChevronDown, Check } from 'lucide-react'
+import {
+  Timer,
+  Trophy,
+  Battery,
+  BatteryWarning,
+  Bluetooth,
+  Boxes,
+  ChevronDown,
+  Check,
+} from 'lucide-react'
 import { formatTime } from '@/lib/format'
 import type { Solve } from '@/types'
 
@@ -19,12 +28,12 @@ interface StatusBarProps {
 
 function calculateAverages(solves: Solve[]) {
   if (solves.length === 0) return { ao5: null, ao12: null, ao50: null, ao100: null, best: null }
-  
-  const times = solves.filter(s => !s.dnf).map(s => s.plusTwo ? s.time + 2000 : s.time)
+
+  const times = solves.filter((s) => !s.dnf).map((s) => (s.plusTwo ? s.time + 2000 : s.time))
   if (times.length === 0) return { ao5: null, ao12: null, ao50: null, ao100: null, best: null }
-  
+
   const best = Math.min(...times)
-  
+
   const calcAo = (n: number) => {
     if (times.length < n) return null
     const lastN = times.slice(0, n)
@@ -32,13 +41,13 @@ function calculateAverages(solves: Solve[]) {
     const trimmed = sorted.slice(1, -1)
     return trimmed.reduce((a, b) => a + b, 0) / trimmed.length
   }
-  
-  return { 
-    ao5: calcAo(5), 
-    ao12: calcAo(12), 
-    ao50: calcAo(50), 
-    ao100: calcAo(100), 
-    best 
+
+  return {
+    ao5: calcAo(5),
+    ao12: calcAo(12),
+    ao50: calcAo(50),
+    ao100: calcAo(100),
+    best,
   }
 }
 
@@ -51,7 +60,7 @@ interface DropdownProps {
 
 function Dropdown({ isOpen, onClose, children, align = 'center' }: DropdownProps) {
   const ref = useRef<HTMLDivElement>(null)
-  
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -63,9 +72,10 @@ function Dropdown({ isOpen, onClose, children, align = 'center' }: DropdownProps
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
-  
-  const alignClass = align === 'left' ? 'left-0' : align === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2'
-  
+
+  const alignClass =
+    align === 'left' ? 'left-0' : align === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2'
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -75,10 +85,10 @@ function Dropdown({ isOpen, onClose, children, align = 'center' }: DropdownProps
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.95 }}
           transition={{ duration: 0.15 }}
-          className={`absolute top-full mt-2 z-50 min-w-[120px] rounded-lg border py-1 shadow-lg ${alignClass}`}
-          style={{ 
+          className={`absolute top-full z-50 mt-2 min-w-[120px] rounded-lg border py-1 shadow-lg ${alignClass}`}
+          style={{
             backgroundColor: 'var(--theme-bgSecondary)',
-            borderColor: 'var(--theme-subAlt)'
+            borderColor: 'var(--theme-subAlt)',
           }}
         >
           {children}
@@ -116,7 +126,14 @@ interface StatusButtonProps {
   color?: string
 }
 
-function StatusButton({ icon: Icon, label, value, onClick, hasDropdown, color }: StatusButtonProps) {
+function StatusButton({
+  icon: Icon,
+  label,
+  value,
+  onClick,
+  hasDropdown,
+  color,
+}: StatusButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -125,16 +142,20 @@ function StatusButton({ icon: Icon, label, value, onClick, hasDropdown, color }:
     >
       <Icon className="h-4 w-4 transition-colors group-hover:text-[var(--theme-text)]" />
       <span className="transition-colors group-hover:text-[var(--theme-text)]">{label}:</span>
-      <span className="font-medium transition-colors group-hover:text-[var(--theme-accent)]">{value}</span>
-      {hasDropdown && <ChevronDown className="h-3 w-3 transition-colors group-hover:text-[var(--theme-text)]" />}
+      <span className="font-medium transition-colors group-hover:text-[var(--theme-accent)]">
+        {value}
+      </span>
+      {hasDropdown && (
+        <ChevronDown className="h-3 w-3 transition-colors group-hover:text-[var(--theme-text)]" />
+      )}
     </button>
   )
 }
 
-export function StatusBar({ 
-  solves, 
-  batteryLevel, 
-  isConnected, 
+export function StatusBar({
+  solves,
+  batteryLevel,
+  isConnected,
   isConnecting,
   method = 'CFOP',
   onConnect,
@@ -144,9 +165,9 @@ export function StatusBar({
   const [methodOpen, setMethodOpen] = useState(false)
   const [avgOpen, setAvgOpen] = useState(false)
   const [selectedAvg, setSelectedAvg] = useState<AverageType>('ao5')
-  
+
   const averages = useMemo(() => calculateAverages(solves), [solves])
-  
+
   const avgValue = averages[selectedAvg]
   const avgLabels: Record<AverageType, string> = {
     ao5: 'ao5',
@@ -154,23 +175,23 @@ export function StatusBar({
     ao50: 'ao50',
     ao100: 'ao100',
   }
-  
+
   const handleMethodSelect = (m: string) => {
     onMethodChange?.(m)
     setMethodOpen(false)
   }
-  
+
   const handleAvgSelect = (avg: AverageType) => {
     setSelectedAvg(avg)
     setAvgOpen(false)
   }
-  
+
   return (
     <div className="flex items-center justify-center gap-2 py-2">
       <div className="relative">
-        <StatusButton 
-          icon={Boxes} 
-          label="method" 
+        <StatusButton
+          icon={Boxes}
+          label="method"
           value={method}
           onClick={() => setMethodOpen(!methodOpen)}
           hasDropdown
@@ -181,10 +202,10 @@ export function StatusBar({
           </DropdownItem>
         </Dropdown>
       </div>
-      
+
       <div className="relative">
-        <StatusButton 
-          icon={Timer} 
+        <StatusButton
+          icon={Timer}
           label={avgLabels[selectedAvg]}
           value={avgValue ? formatTime(avgValue) : '-'}
           onClick={() => setAvgOpen(!avgOpen)}
@@ -205,25 +226,25 @@ export function StatusBar({
           </DropdownItem>
         </Dropdown>
       </div>
-      
-      <StatusButton 
-        icon={Trophy} 
-        label="pb" 
+
+      <StatusButton
+        icon={Trophy}
+        label="pb"
         value={averages.best ? formatTime(averages.best) : '-'}
       />
-      
+
       {isConnected ? (
-        <StatusButton 
+        <StatusButton
           icon={batteryLevel !== null && batteryLevel <= 20 ? BatteryWarning : Battery}
-          label="battery" 
+          label="battery"
           value={batteryLevel !== null ? `${batteryLevel}%` : '-'}
           onClick={onOpenCubeInfo}
           color={batteryLevel !== null && batteryLevel <= 20 ? 'var(--theme-error)' : undefined}
         />
       ) : (
-        <StatusButton 
+        <StatusButton
           icon={Bluetooth}
-          label="cube" 
+          label="cube"
           value={isConnecting ? 'connecting...' : '(press to connect)'}
           onClick={onConnect}
         />

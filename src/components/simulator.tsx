@@ -11,7 +11,10 @@ function parseAlgorithm(alg: string): string[] {
     .filter((m) => m.length > 0)
 }
 
-function simulateSolve(scramble: string, solution: string): { analysis: CFOPAnalysis | null; error: string | null } {
+function simulateSolve(
+  scramble: string,
+  solution: string,
+): { analysis: CFOPAnalysis | null; error: string | null } {
   try {
     const scrambleMoves = parseAlgorithm(scramble)
     const solutionMoves = parseAlgorithm(solution)
@@ -21,11 +24,29 @@ function simulateSolve(scramble: string, solution: string): { analysis: CFOPAnal
       cube = applyMove(cube, move)
     }
 
-    const stateHistory: CubeFaces[] = [{ ...cube, U: [...cube.U], D: [...cube.D], F: [...cube.F], B: [...cube.B], L: [...cube.L], R: [...cube.R] }]
+    const stateHistory: CubeFaces[] = [
+      {
+        ...cube,
+        U: [...cube.U],
+        D: [...cube.D],
+        F: [...cube.F],
+        B: [...cube.B],
+        L: [...cube.L],
+        R: [...cube.R],
+      },
+    ]
 
     for (const move of solutionMoves) {
       cube = applyMove(cube, move)
-      stateHistory.push({ ...cube, U: [...cube.U], D: [...cube.D], F: [...cube.F], B: [...cube.B], L: [...cube.L], R: [...cube.R] })
+      stateHistory.push({
+        ...cube,
+        U: [...cube.U],
+        D: [...cube.D],
+        F: [...cube.F],
+        B: [...cube.B],
+        L: [...cube.L],
+        R: [...cube.R],
+      })
     }
 
     const analysis = analyzeCFOP(solutionMoves, stateHistory)
@@ -56,11 +77,15 @@ export function Simulator() {
 
   return (
     <div className="flex h-full flex-col p-6">
-      <h2 className="mb-6 text-xl font-semibold" style={{ color: 'var(--theme-text)' }}>CFOP Simulator</h2>
+      <h2 className="mb-6 text-xl font-semibold" style={{ color: 'var(--theme-text)' }}>
+        CFOP Simulator
+      </h2>
 
       <div className="mb-6 space-y-4">
         <div>
-          <label className="mb-2 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>Scramble</label>
+          <label className="mb-2 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+            Scramble
+          </label>
           <textarea
             value={scramble}
             onChange={(e) => setScramble(e.target.value)}
@@ -76,7 +101,9 @@ export function Simulator() {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>Solution</label>
+          <label className="mb-2 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+            Solution
+          </label>
           <textarea
             value={solution}
             onChange={(e) => setSolution(e.target.value)}
@@ -112,16 +139,20 @@ export function Simulator() {
       )}
 
       {analysis && (
-        <div 
+        <div
           className="flex-1 overflow-auto rounded-lg p-4"
           style={{ backgroundColor: 'var(--theme-bgSecondary)' }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>CFOP Analysis</h3>
-            <span className="text-sm" style={{ color: 'var(--theme-sub)' }}>{totalMoves} total moves</span>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--theme-text)' }}>
+              CFOP Analysis
+            </h3>
+            <span className="text-sm" style={{ color: 'var(--theme-sub)' }}>
+              {totalMoves} total moves
+            </span>
           </div>
 
-          <div 
+          <div
             className="mb-4 flex items-center gap-3 rounded-lg p-3"
             style={{ backgroundColor: 'var(--theme-subAlt)' }}
           >
@@ -137,7 +168,12 @@ export function Simulator() {
           <div className="space-y-3">
             <PhaseRow name="Cross" moves={analysis.cross.moves} skipped={analysis.cross.skipped} />
             {analysis.f2l.map((slot, i) => (
-              <PhaseRow key={i} name={`F2L Slot ${i + 1}`} moves={slot.moves} skipped={slot.skipped} />
+              <PhaseRow
+                key={i}
+                name={`F2L Slot ${i + 1}`}
+                moves={slot.moves}
+                skipped={slot.skipped}
+              />
             ))}
             <PhaseRow name="OLL" moves={analysis.oll.moves} skipped={analysis.oll.skipped} />
             <PhaseRow name="PLL" moves={analysis.pll.moves} skipped={analysis.pll.skipped} />
@@ -146,7 +182,10 @@ export function Simulator() {
       )}
 
       {!analysis && !error && (
-        <div className="flex flex-1 items-center justify-center" style={{ color: 'var(--theme-sub)' }}>
+        <div
+          className="flex flex-1 items-center justify-center"
+          style={{ color: 'var(--theme-sub)' }}
+        >
           Enter a scramble and solution, then click Simulate to analyze.
         </div>
       )}
@@ -158,8 +197,12 @@ function PhaseRow({ name, moves, skipped }: { name: string; moves: string[]; ski
   return (
     <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--theme-subAlt)' }}>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-sm font-medium" style={{ color: 'var(--theme-text)' }}>{name}</span>
-        <span className="text-xs" style={{ color: 'var(--theme-sub)' }}>{skipped ? 0 : moves.length} moves</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--theme-text)' }}>
+          {name}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--theme-sub)' }}>
+          {skipped ? 0 : moves.length} moves
+        </span>
       </div>
       <div className="font-mono text-sm" style={{ color: 'var(--theme-sub)' }}>
         {skipped ? <span className="italic">Skipped</span> : moves.join(' ') || '—'}

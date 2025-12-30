@@ -34,11 +34,11 @@ export function ConnectionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div 
+      <div
         className="relative w-full max-w-md rounded-lg p-6 shadow-lg duration-200 animate-in fade-in zoom-in-95"
-        style={{ 
+        style={{
           backgroundColor: 'var(--theme-bgSecondary)',
-          border: '1px solid var(--theme-subAlt)'
+          border: '1px solid var(--theme-subAlt)',
         }}
       >
         <button
@@ -58,7 +58,9 @@ export function ConnectionModal({
             >
               {title}
             </h2>
-            <p className="text-sm" style={{ color: 'var(--theme-sub)' }}>{message}</p>
+            <p className="text-sm" style={{ color: 'var(--theme-sub)' }}>
+              {message}
+            </p>
           </div>
 
           {isMacRequired && (
@@ -77,13 +79,15 @@ export function ConnectionModal({
                 value={macAddress}
                 onChange={(e) => setMacAddress(e.target.value)}
                 className="flex h-10 w-full rounded-md px-3 py-2 text-sm focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ 
+                style={{
                   backgroundColor: 'var(--theme-subAlt)',
                   color: 'var(--theme-text)',
-                  border: '1px solid var(--theme-sub)'
+                  border: '1px solid var(--theme-sub)',
                 }}
               />
-              <p className="text-xs" style={{ color: 'var(--theme-sub)' }}>Format: XX:XX:XX:XX:XX:XX</p>
+              <p className="text-xs" style={{ color: 'var(--theme-sub)' }}>
+                Format: XX:XX:XX:XX:XX:XX
+              </p>
             </div>
           )}
 

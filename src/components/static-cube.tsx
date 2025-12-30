@@ -6,7 +6,10 @@ interface StaticCubeProps {
   faces: CubeFaces
 }
 
-const FACE_POSITIONS: Record<keyof CubeFaces, { position: [number, number, number]; rotation: [number, number, number] }> = {
+const FACE_POSITIONS: Record<
+  keyof CubeFaces,
+  { position: [number, number, number]; rotation: [number, number, number] }
+> = {
   U: { position: [0, 1.5, 0], rotation: [-Math.PI / 2, 0, 0] },
   D: { position: [0, -1.5, 0], rotation: [Math.PI / 2, 0, 0] },
   F: { position: [0, 0, 1.5], rotation: [0, 0, 0] },
@@ -17,7 +20,7 @@ const FACE_POSITIONS: Record<keyof CubeFaces, { position: [number, number, numbe
 
 function Sticker({ color, position }: { color: Color; position: [number, number, number] }) {
   const hexColor = COLOR_HEX[color]
-  
+
   return (
     <mesh position={position}>
       <planeGeometry args={[0.9, 0.9]} />
@@ -26,15 +29,25 @@ function Sticker({ color, position }: { color: Color; position: [number, number,
   )
 }
 
-function CubeFace({ colors, position, rotation }: { 
+function CubeFace({
+  colors,
+  position,
+  rotation,
+}: {
   colors: Color[]
   position: [number, number, number]
   rotation: [number, number, number]
 }) {
   const stickerPositions: [number, number, number][] = [
-    [-1, 1, 0.01], [0, 1, 0.01], [1, 1, 0.01],
-    [-1, 0, 0.01], [0, 0, 0.01], [1, 0, 0.01],
-    [-1, -1, 0.01], [0, -1, 0.01], [1, -1, 0.01],
+    [-1, 1, 0.01],
+    [0, 1, 0.01],
+    [1, 1, 0.01],
+    [-1, 0, 0.01],
+    [0, 0, 0.01],
+    [1, 0, 0.01],
+    [-1, -1, 0.01],
+    [0, -1, 0.01],
+    [1, -1, 0.01],
   ]
 
   return (

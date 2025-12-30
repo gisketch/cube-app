@@ -368,10 +368,10 @@ export function getCubeColors(cubeTheme: CubeTheme, currentTheme: string): Recor
   if (cubeTheme === 'standard') {
     return STANDARD_CUBE_COLORS
   }
-  
+
   const themeToUse = cubeTheme === 'current' ? currentTheme : cubeTheme
   const theme = themes[themeToUse] || themes.dark
-  
+
   return {
     cubeWhite: theme.colors.cubeWhite,
     cubeYellow: theme.colors.cubeYellow,

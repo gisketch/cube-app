@@ -48,10 +48,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h3
-      className={cn('text-lg font-semibold', className)}
-      style={{ color: 'var(--theme-text)' }}
-    >
+    <h3 className={cn('text-lg font-semibold', className)} style={{ color: 'var(--theme-text)' }}>
       {children}
     </h3>
   )

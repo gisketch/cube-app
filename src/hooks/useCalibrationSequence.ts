@@ -23,7 +23,7 @@ export function useCalibrationSequence() {
     recentMovesRef.current.push({ move, time: now })
 
     recentMovesRef.current = recentMovesRef.current.filter(
-      (m) => now - m.time < CALIBRATION_SEQUENCE_TIMEOUT
+      (m) => now - m.time < CALIBRATION_SEQUENCE_TIMEOUT,
     )
 
     const recentMoves = recentMovesRef.current.map((m) => m.move)
@@ -53,18 +53,21 @@ export function useCalibrationSequence() {
     return null
   }, [])
 
-  const handleCalibration = useCallback((move: string): boolean => {
-    const calibration = checkSequence(move)
-    if (calibration === 'gyro') {
-      actionsRef.current.resetGyro()
-      return true
-    }
-    if (calibration === 'cube') {
-      actionsRef.current.syncCube()
-      return true
-    }
-    return false
-  }, [checkSequence])
+  const handleCalibration = useCallback(
+    (move: string): boolean => {
+      const calibration = checkSequence(move)
+      if (calibration === 'gyro') {
+        actionsRef.current.resetGyro()
+        return true
+      }
+      if (calibration === 'cube') {
+        actionsRef.current.syncCube()
+        return true
+      }
+      return false
+    },
+    [checkSequence],
+  )
 
   return {
     checkSequence,

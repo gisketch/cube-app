@@ -23,19 +23,19 @@ A modern Rubik's Cube timer and solver application built with React, Three.js, a
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Framework** | React 19 |
-| **Language** | TypeScript 5.9 |
-| **Build Tool** | Vite 7 |
-| **3D Graphics** | Three.js, React Three Fiber, React Three Drei |
-| **Styling** | Tailwind CSS 3.4 |
-| **Animation** | Framer Motion |
-| **UI Components** | shadcn/ui (Radix primitives) |
-| **Cube Library** | `cubing` (kpuzzle, scramble generation) |
-| **Smart Cube** | `gan-web-bluetooth` |
-| **Icons** | Lucide React |
-| **Routing** | React Router DOM 7 |
+| Category          | Technology                                    |
+| ----------------- | --------------------------------------------- |
+| **Framework**     | React 19                                      |
+| **Language**      | TypeScript 5.9                                |
+| **Build Tool**    | Vite 7                                        |
+| **3D Graphics**   | Three.js, React Three Fiber, React Three Drei |
+| **Styling**       | Tailwind CSS 3.4                              |
+| **Animation**     | Framer Motion                                 |
+| **UI Components** | shadcn/ui (Radix primitives)                  |
+| **Cube Library**  | `cubing` (kpuzzle, scramble generation)       |
+| **Smart Cube**    | `gan-web-bluetooth`                           |
+| **Icons**         | Lucide React                                  |
+| **Routing**       | React Router DOM 7                            |
 
 ---
 
@@ -162,36 +162,42 @@ src/
 ## Core Features
 
 ### 1. Smart Cube Connection
+
 - Connects to GAN Smart Cubes via Web Bluetooth API
 - Real-time move detection and gyroscope orientation
 - Battery level monitoring
 - MAC address fallback for connection issues
 
 ### 2. Timer System
+
 - **Idle**: Waiting for scramble
 - **Inspection**: Post-scramble inspection phase
 - **Running**: Active timer during solve
 - **Stopped**: Solve complete
 
 ### 3. Scramble Tracking
+
 - Generates random 3x3 scrambles using `cubing` library
 - Tracks user's scramble execution progress
 - Detects divergence and shows recovery moves
 - Visual feedback for completed/current/pending moves
 
 ### 4. CFOP Analysis
+
 - Automatically detects cross color
 - Identifies Cross, F2L slots (4), OLL, and PLL phases
 - Tracks move counts and timing per phase
 - Compares actual splits to ideal splits
 
 ### 5. Solve Statistics
+
 - Total time, TPS (turns per second), move count
 - Per-phase breakdown with recognition/execution times
 - TPS over time graph
 - Historical averages (Ao5, Ao12)
 
 ### 6. Solve Replay
+
 - Records gyroscope data during solves
 - Playback with variable speed control
 - 2D and 3D view modes
@@ -209,14 +215,14 @@ Themes are defined in `src/lib/themes.ts`:
 interface Theme {
   name: string
   colors: {
-    bg: string          // Main background
+    bg: string // Main background
     bgSecondary: string // Secondary panels
-    main: string        // Primary accent
-    sub: string         // Subdued text
-    subAlt: string      // Borders, dividers
-    text: string        // Primary text
-    error: string       // Error states
-    accent: string      // Interactive elements
+    main: string // Primary accent
+    sub: string // Subdued text
+    subAlt: string // Borders, dividers
+    text: string // Primary text
+    error: string // Error states
+    accent: string // Interactive elements
     accentHover: string // Hover states
   }
 }
@@ -224,20 +230,20 @@ interface Theme {
 
 ### Available Themes
 
-| Theme | Style |
-|-------|-------|
-| `dark` | Default dark theme |
-| `light` | Light mode |
-| `serikaDark` | Monkeytype-inspired dark |
+| Theme         | Style                     |
+| ------------- | ------------------------- |
+| `dark`        | Default dark theme        |
+| `light`       | Light mode                |
+| `serikaDark`  | Monkeytype-inspired dark  |
 | `serikaLight` | Monkeytype-inspired light |
-| `nord` | Nord color palette |
-| `dracula` | Dracula theme |
-| `monokai` | Monokai editor theme |
-| `ocean` | Blue ocean tones |
-| `matrix` | Green terminal style |
-| `midnight` | Purple dark theme |
-| `everforest` | Soft green nature theme |
-| `oneDark` | Atom One Dark |
+| `nord`        | Nord color palette        |
+| `dracula`     | Dracula theme             |
+| `monokai`     | Monokai editor theme      |
+| `ocean`       | Blue ocean tones          |
+| `matrix`      | Green terminal style      |
+| `midnight`    | Purple dark theme         |
+| `everforest`  | Soft green nature theme   |
+| `oneDark`     | Atom One Dark             |
 
 ### CSS Variables
 
@@ -263,9 +269,9 @@ Themes are applied via CSS custom properties:
 Components use inline styles with CSS variables:
 
 ```tsx
-<div 
+<div
   className="rounded-lg p-4"
-  style={{ 
+  style={{
     backgroundColor: 'var(--theme-bgSecondary)',
     color: 'var(--theme-text)',
     border: '1px solid var(--theme-subAlt)'
@@ -304,27 +310,24 @@ Configuration in `components.json`:
 Uses Class Variance Authority (CVA) for variants:
 
 ```tsx
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2...',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground hover:opacity-90',
-        secondary: '...',
-        outline: '...',
-        ghost: '...',
-        link: '...',
-        destructive: '...',
-      },
-      size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
-      },
+const buttonVariants = cva('inline-flex items-center justify-center gap-2...', {
+  variants: {
+    variant: {
+      default: 'bg-primary text-primary-foreground hover:opacity-90',
+      secondary: '...',
+      outline: '...',
+      ghost: '...',
+      link: '...',
+      destructive: '...',
     },
-  }
-)
+    size: {
+      default: 'h-10 px-4 py-2',
+      sm: 'h-9 rounded-md px-3',
+      lg: 'h-11 rounded-md px-8',
+      icon: 'h-10 w-10',
+    },
+  },
+})
 ```
 
 ### Tooltip Component
@@ -332,9 +335,9 @@ const buttonVariants = cva(
 Built on Radix UI primitives:
 
 ```tsx
-import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 
-<TooltipProvider>
+;<TooltipProvider>
   <Tooltip>
     <TooltipTrigger>Hover me</TooltipTrigger>
     <TooltipContent>Content here</TooltipContent>
@@ -520,11 +523,11 @@ interface ParsedMove {
 ### Move Utilities
 
 ```typescript
-parseMove("R'")      // { face: 'R', modifier: "'", original: "R'" }
-parseScramble("R U R' U'")  // ParsedMove[]
+parseMove("R'") // { face: 'R', modifier: "'", original: "R'" }
+parseScramble("R U R' U'") // ParsedMove[]
 getInverseMove(move) // Returns inverse move
-combineMove(a, b)    // Combine same-face moves
-isSameFace(a, b)     // Check if same face
+combineMove(a, b) // Combine same-face moves
+isSameFace(a, b) // Check if same face
 ```
 
 ### Face-Based State
@@ -578,7 +581,7 @@ function analyzeCFOP(moves: string[], stateHistory: CubeFaces[]): CFOPAnalysis {
   <ambientLight intensity={0} />
   <directionalLight position={[10, 10, 5]} intensity={0.8} />
   <group scale={0.5}>
-    <RubiksCube 
+    <RubiksCube
       pattern={pattern}
       quaternionRef={quaternionRef}
       cubeRef={cubeRef}
@@ -593,6 +596,7 @@ function analyzeCFOP(moves: string[], stateHistory: CubeFaces[]): CFOPAnalysis {
 ### Cubie Rendering
 
 Each cubie (small cube) is rendered with:
+
 - **RoundedBox** for the inner body
 - **ExtrudeGeometry** for colored face stickers
 - Custom shapes for corners, edges, and centers
@@ -620,7 +624,7 @@ useFrame((_, delta) => {
   if (currentAnimation.current) {
     // Rotate cubies in the layer
     const rotQuat = new THREE.Quaternion().setFromAxisAngle(axisVector, rotationStep)
-    cubies.forEach(cubie => {
+    cubies.forEach((cubie) => {
       cubie.position.applyAxisAngle(axisVector, rotationStep)
       cubie.quaternion.premultiply(rotQuat)
     })
@@ -663,7 +667,7 @@ const handleEvent = useCallback((event: GanCubeEvent) => {
   } else if (event.type === 'MOVE') {
     onMoveRef.current?.(event.move)
   } else if (event.type === 'BATTERY') {
-    setState(prev => ({ ...prev, batteryLevel: event.batteryLevel }))
+    setState((prev) => ({ ...prev, batteryLevel: event.batteryLevel }))
   } else if (event.type === 'DISCONNECT') {
     // Handle disconnection
   }
@@ -673,6 +677,7 @@ const handleEvent = useCallback((event: GanCubeEvent) => {
 ### Calibration Gestures
 
 Quick calibration via move sequences:
+
 - **U U U U** (4 U moves): Reset gyroscope
 - **F F F F** (4 F moves): Sync cube state
 
@@ -689,15 +694,18 @@ const checkCalibrationSequence = useCallback((move: string) => {
 ## State Management
 
 ### Local State
+
 - React `useState` for UI state
 - `useRef` for performance-critical data
 - `useMemo` for computed values
 
 ### Persistence
+
 - `localStorage` for settings and solve history
 - Automatic save on state changes
 
 ### Global State
+
 - Theme via React Context (`ThemeProvider`)
 - No external state library needed
 
@@ -826,7 +834,7 @@ myTheme: {
 2. Use theme CSS variables for colors:
 
 ```tsx
-style={{ 
+style={{
   backgroundColor: 'var(--theme-bgSecondary)',
   color: 'var(--theme-text)'
 }}
@@ -853,6 +861,7 @@ import type { Solve, CFOPAnalysis, TimerStatus, TabType } from '@/types'
 ```
 
 **Exported Types:**
+
 - `TabType` - Navigation tab types
 - `SolveViewMode` - Solve detail view modes
 - `TimerStatus` - Timer states (idle/inspection/running/stopped)
@@ -869,11 +878,11 @@ Centralized formatting functions (no more duplicate `formatTime`):
 ```typescript
 import { formatTime, formatDuration, formatTPS, formatDate, formatPercentage } from '@/lib/format'
 
-formatTime(12345)        // "12.34"
-formatDuration(2500)     // "2.50s"
-formatTPS(5.5)           // "5.50"
+formatTime(12345) // "12.34"
+formatDuration(2500) // "2.50s"
+formatTPS(5.5) // "5.50"
 formatDate('2024-01-01') // "Jan 1, 2024 10:30 AM"
-formatPercentage(0.75)   // "75%"
+formatPercentage(0.75) // "75%"
 ```
 
 ### Constants (`src/lib/constants.ts`)
@@ -881,12 +890,12 @@ formatPercentage(0.75)   // "75%"
 Shared constants eliminate magic values:
 
 ```typescript
-import { 
-  CUBE_COLORS, 
-  CROSS_COLOR_MAP, 
-  PHASE_COLORS, 
+import {
+  CUBE_COLORS,
+  CROSS_COLOR_MAP,
+  PHASE_COLORS,
   CALIBRATION_SEQUENCE_TIMEOUT,
-  IDEAL_CFOP_SPLITS 
+  IDEAL_CFOP_SPLITS,
 } from '@/lib/constants'
 ```
 
@@ -895,10 +904,20 @@ import {
 Reusable themed UI components:
 
 ```typescript
-import { Button, Card, CardHeader, CardTitle, Kbd, IconButton, StatDisplay, StatRow } from '@/components/ui'
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  Kbd,
+  IconButton,
+  StatDisplay,
+  StatRow,
+} from '@/components/ui'
 ```
 
 **Components:**
+
 - `Card`, `CardHeader`, `CardTitle` - Consistent card styling
 - `Kbd` - Keyboard key display
 - `IconButton` - Animated icon buttons with variants
