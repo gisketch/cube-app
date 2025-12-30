@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 import * as THREE from 'three'
 import type { GyroFrame, MoveFrame } from '@/types'
 
@@ -59,11 +59,14 @@ export function useGyroRecorder() {
 
   const isRecording = useCallback(() => isRecordingRef.current, [])
 
-  return {
-    startRecording,
-    stopRecording,
-    recordGyroFrame,
-    recordMove,
-    isRecording,
-  }
+  return useMemo(
+    () => ({
+      startRecording,
+      stopRecording,
+      recordGyroFrame,
+      recordMove,
+      isRecording,
+    }),
+    [startRecording, stopRecording, recordGyroFrame, recordMove, isRecording],
+  )
 }

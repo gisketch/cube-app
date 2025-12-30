@@ -163,7 +163,6 @@ function App() {
       }
       timer.startInspection()
       startSolving()
-      gyroRecorder.startRecording()
     }
   }, [
     scrambleState.status,
@@ -171,7 +170,6 @@ function App() {
     timer,
     startSolving,
     applyScramble,
-    gyroRecorder,
   ])
 
   const calibrationActionsRef = useRef<{ resetGyro: () => void; syncCube: () => void }>({
@@ -233,6 +231,7 @@ function App() {
 
       if (timer.status === 'inspection') {
         timer.startTimer()
+        gyroRecorder.startRecording()
       }
     },
     [trackMove, timer, updateCubeState, updateCubeFaces, gyroRecorder, checkCalibrationSequence],
@@ -253,7 +252,7 @@ function App() {
   } = useGanCube(handleMove)
 
   useEffect(() => {
-    if (!gyroRecorder.isRecording() || !isConnected) return
+    if (!isConnected) return
 
     const interval = setInterval(() => {
       gyroRecorder.recordGyroFrame(quaternionRef.current)

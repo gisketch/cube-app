@@ -56,7 +56,6 @@ export function useGanCube(onMove?: (move: string) => void) {
         quaternionRef.current.copy(correctedQuat)
       } else if (event.type === 'MOVE') {
         const msg = `MOVE: ${event.move} (face: ${event.face}, dir: ${event.direction})`
-        console.log(msg)
         addLog(msg)
         onMoveRef.current?.(event.move)
       } else if (event.type === 'BATTERY') {

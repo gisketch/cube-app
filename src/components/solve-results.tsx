@@ -322,7 +322,15 @@ export function SolveResults({
 
   const hasGyroData = Boolean(solve?.gyroData && solve.gyroData.length > 0)
   const hasMoveTimings = Boolean(solve?.moveTimings && solve.moveTimings.length > 0)
-  const [enableGyro, setEnableGyro] = useState(hasGyroData)
+  const [enableGyro, setEnableGyro] = useState(true)
+
+  useEffect(() => {
+    if (hasGyroData) {
+      setEnableGyro(true)
+    }
+  }, [hasGyroData])
+
+
 
   const replayCubeRef = useRef<RubiksCubeRef>(null)
   const replayQuaternionRef = useRef<THREE.Quaternion>(new THREE.Quaternion())
@@ -507,11 +515,11 @@ export function SolveResults({
     const startMoveIndex = currentMoveIndexRef.current
 
     if (hasMoveTimings && solve.moveTimings && solve.moveTimings.length > 0) {
-      const firstMoveTime = solve.moveTimings[0]?.time || 0
+      const firstGyroTime = solve.gyroData?.[0]?.time ?? 0
       const startTime =
         startMoveIndex >= 0 && startMoveIndex < solve.moveTimings.length
           ? solve.moveTimings[startMoveIndex].time
-          : firstMoveTime
+          : firstGyroTime
       const speedMultiplier = 500 / playbackSpeed
 
       const animate = () => {
@@ -802,7 +810,7 @@ export function SolveResults({
                   <CubeViewer
                     key={replayKey}
                     facelets={initialScrambledFacelets}
-                    quaternionRef={enableGyro && hasGyroData ? replayQuaternionRef : undefined}
+                    quaternionRef={replayQuaternionRef}
                     cubeRef={replayCubeRef}
                     config={{
                       ...DEFAULT_CONFIG,

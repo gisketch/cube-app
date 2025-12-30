@@ -336,7 +336,6 @@ Built on Radix UI primitives:
 
 ```tsx
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-
 ;<TooltipProvider>
   <Tooltip>
     <TooltipTrigger>Hover me</TooltipTrigger>
