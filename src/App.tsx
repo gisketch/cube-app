@@ -7,7 +7,6 @@ import { CommandPalette } from '@/components/command-palette'
 import { CubeViewer, type RubiksCubeRef, type CubeColors } from '@/components/cube'
 import { ScrambleNotation } from '@/components/scramble-notation'
 import { SolveResults } from '@/components/solve-results'
-import { SolveDetailPage } from '@/components/solve-detail-page'
 import { RecentSolves } from '@/components/recent-solves'
 import { Simulator } from '@/components/simulator'
 import { SettingsPanel } from '@/components/settings-panel'
@@ -605,15 +604,7 @@ function App() {
               )}
             </div>
           ) : activeTab === 'account' ? (
-            solveViewMode === 'stats' && selectedSolve ? (
-              <SolveDetailPage
-                solve={selectedSolve}
-                onBack={() => {
-                  setSolveViewMode('list')
-                  setSelectedSolve(null)
-                }}
-              />
-            ) : solveViewMode === 'results' && selectedSolve ? (
+            solveViewMode === 'results' && selectedSolve ? (
               <SolveResults
                 time={selectedSolve.time}
                 moves={selectedSolve.solution.length}
@@ -630,7 +621,6 @@ function App() {
                   setSolveViewMode('list')
                   setActiveTab('timer')
                 }}
-                onViewStats={() => setSolveViewMode('stats')}
                 solve={selectedSolve}
               />
             ) : (
