@@ -18,13 +18,9 @@ import { useCubeState } from '@/hooks/useCubeState'
 import { useCubeFaces } from '@/hooks/useCubeFaces'
 import { useGanCube } from '@/hooks/useGanCube'
 import { useScrambleTracker } from '@/hooks/useScrambleTracker'
-import { useTimer } from '@/hooks/useTimer'
-import { useManualTimer } from '@/hooks/useManualTimer'
 import { useSolves, type Solve } from '@/hooks/useSolves'
-import { useGyroRecorder } from '@/hooks/useGyroRecorder'
 import { useSettings } from '@/hooks/useSettings'
-import { useExperience } from '@/contexts/ExperienceContext'
-import { useAchievements } from '@/contexts/AchievementsContext'
+import { useSolveSession } from '@/contexts/SolveSessionContext'
 import { ConnectionModal } from '@/components/connection-modal'
 import { CalibrationModal } from '@/components/calibration-modal'
 import { CubeInfoModal } from '@/components/cube-info-modal'
@@ -32,7 +28,6 @@ import { generateScramble, SOLVED_FACELETS } from '@/lib/cube-state'
 import { setCubeColors } from '@/lib/cube-state'
 import { setCubeFaceColors } from '@/lib/cube-faces'
 import { getCubeColors } from '@/lib/themes'
-import { analyzeCFOP, type CFOPAnalysis } from '@/lib/cfop-analyzer'
 import { DEFAULT_CONFIG } from '@/config/scene-config'
 import type { KPattern } from 'cubing/kpuzzle'
 
@@ -55,7 +50,6 @@ function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const cubeRef = useRef<RubiksCubeRef>(null)
   const recentMovesRef = useRef<MoveWithTime[]>([])
-  const solveSavedRef = useRef(false)
 
   const {
     cubeState,
@@ -72,22 +66,29 @@ function App() {
     startSolving,
   } = useScrambleTracker()
 
-  const timer = useTimer()
-  const { solves, addSolve, deleteSolve, migrateLocalToCloud, isCloudSync } = useSolves()
+  const {
+    timer,
+    manualTimer,
+    gyroRecorder,
+    solveSaved,
+    lastSolveTime,
+    lastMoveCount,
+    lastScramble,
+    lastAnalysis,
+    isRepeatedScramble,
+    manualTimerEnabled,
+    setManualTimerEnabled,
+    setRepeatedScramble,
+    saveSolve,
+    scrambleTrigger,
+    triggerNewScramble,
+    resetSolveSession,
+  } = useSolveSession()
+
+  const { solves, deleteSolve, migrateLocalToCloud, isCloudSync } = useSolves()
   const { settings } = useSettings()
-  const gyroRecorder = useGyroRecorder()
-  const { addXP } = useExperience()
-  const { recordSolve, checkAndUpdateAchievements, stats: userStats } = useAchievements()
   
   const [manualScramble, setManualScramble] = useState('')
-  const [manualTimerEnabled, setManualTimerEnabled] = useState(false)
-  const [triggerNewScramble, setTriggerNewScramble] = useState(0)
-  const [isRepeatedScramble, setIsRepeatedScramble] = useState(false)
-  
-  const manualTimer = useManualTimer({
-    enabled: manualTimerEnabled && activeTab === 'timer',
-    onNextScramble: () => setTriggerNewScramble(n => n + 1),
-  })
 
   const cubeColorValues = useMemo(
     () => getCubeColors(settings.cubeTheme, settings.theme),
@@ -120,10 +121,6 @@ function App() {
     clearHistory,
     applyScramble,
   } = useCubeFaces()
-  const [lastAnalysis, setLastAnalysis] = useState<CFOPAnalysis | null>(null)
-  const [lastSolveTime, setLastSolveTime] = useState<number>(0)
-  const [lastMoveCount, setLastMoveCount] = useState<number>(0)
-  const [lastScramble, setLastScramble] = useState<string>('')
 
   const [isCalibrationOpen, setIsCalibrationOpen] = useState(false)
   const [isCubeInfoOpen, setIsCubeInfoOpen] = useState(false)
@@ -146,49 +143,21 @@ function App() {
       syncWithFacelets(SOLVED_FACELETS)
     }
 
-    if (solved && timer.status === 'running' && !solveSavedRef.current) {
-      solveSavedRef.current = true
+    if (solved && timer.status === 'running' && !solveSaved) {
       const finalTime = timer.stopTimer()
       if (finalTime && scrambleState.originalScramble) {
         const history = getHistory()
-        const analysis = analyzeCFOP(history.moves, history.states)
-        setLastAnalysis(analysis)
-        setLastSolveTime(finalTime)
-        setLastMoveCount(history.moves.length)
-        setLastScramble(scrambleState.originalScramble)
-
         const recordedData = gyroRecorder.stopRecording()
 
-        addSolve({
+        saveSolve({
           time: finalTime,
           scramble: scrambleState.originalScramble,
           solution: history.moves,
-          cfopAnalysis: analysis || undefined,
-          gyroData: recordedData.gyroData.length > 0 ? recordedData.gyroData : undefined,
-          moveTimings: recordedData.moveTimings.length > 0 ? recordedData.moveTimings : undefined,
-          ...(isRepeatedScramble && { isRepeatedScramble: true }),
+          states: history.states,
+          isManual: false,
+          gyroData: recordedData.gyroData,
+          moveTimings: recordedData.moveTimings,
         })
-
-        if (!isRepeatedScramble) {
-          addXP(finalTime, false)
-          recordSolve()
-          
-          const statsUpdate: Record<string, number> = {
-            totalSolves: userStats.totalSolves + 1,
-            totalMoves: userStats.totalMoves + history.moves.length,
-          }
-          
-          if (analysis) {
-            if (analysis.oll.skipped) statsUpdate.ollSkips = userStats.ollSkips + 1
-            if (analysis.pll.skipped) statsUpdate.pllSkips = userStats.pllSkips + 1
-            if (analysis.cross.moves.length <= 8) statsUpdate.crossUnder8Moves = userStats.crossUnder8Moves + 1
-          }
-          
-          if (history.moves.length <= 20) statsUpdate.godsNumberSolves = userStats.godsNumberSolves + 1
-          if (finalTime < 20000 && history.moves.length > 80) statsUpdate.sub20With80Moves = userStats.sub20With80Moves + 1
-          
-          checkAndUpdateAchievements(statsUpdate)
-        }
       }
     }
   }, [
@@ -200,14 +169,10 @@ function App() {
     scrambleState.originalScramble,
     scrambleState.isSolved,
     scrambleState.status,
-    addSolve,
     getHistory,
     gyroRecorder,
-    isRepeatedScramble,
-    addXP,
-    recordSolve,
-    checkAndUpdateAchievements,
-    userStats,
+    solveSaved,
+    saveSolve,
   ])
 
   useEffect(() => {
@@ -346,33 +311,23 @@ function App() {
 
   const handleNewScramble = useCallback(async () => {
     setIsScrambling(true)
-    setIsRepeatedScramble(false)
-    solveSavedRef.current = false
-    timer.reset()
-    manualTimer.reset()
+    setRepeatedScramble(false)
+    resetSolveSession()
     clearHistory()
-    setLastAnalysis(null)
-    setLastSolveTime(0)
-    setLastMoveCount(0)
     const scrambleAlg = await generateScramble()
     setScramble(scrambleAlg)
     setManualScramble(scrambleAlg)
     setIsScrambling(false)
-  }, [setScramble, timer, manualTimer, clearHistory])
+  }, [setScramble, resetSolveSession, clearHistory, setRepeatedScramble])
 
   const handleRepeatScramble = useCallback(() => {
     if (!lastScramble) return
-    setIsRepeatedScramble(true)
-    solveSavedRef.current = false
-    timer.reset()
-    manualTimer.reset()
+    setRepeatedScramble(true)
+    resetSolveSession()
     clearHistory()
-    setLastAnalysis(null)
-    setLastSolveTime(0)
-    setLastMoveCount(0)
     setScramble(lastScramble)
     setManualScramble(lastScramble)
-  }, [lastScramble, setScramble, timer, manualTimer, clearHistory])
+  }, [lastScramble, setScramble, resetSolveSession, clearHistory, setRepeatedScramble])
 
   useEffect(() => {
     handleNewScramble()
@@ -380,41 +335,26 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (triggerNewScramble > 0) {
+    if (scrambleTrigger > 0) {
       handleNewScramble()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerNewScramble])
+  }, [scrambleTrigger])
 
   useEffect(() => {
     setManualTimerEnabled(!isConnected)
-  }, [isConnected])
+  }, [isConnected, setManualTimerEnabled])
 
   useEffect(() => {
-    if (manualTimer.status === 'stopped' && manualTimerEnabled && manualScramble && !solveSavedRef.current) {
-      solveSavedRef.current = true
-      setLastSolveTime(manualTimer.time)
-      setLastMoveCount(0)
-      setLastAnalysis(null)
-      setLastScramble(manualScramble)
-
-      addSolve({
+    if (manualTimer.status === 'stopped' && manualTimerEnabled && manualScramble && !solveSaved) {
+      saveSolve({
         time: manualTimer.time,
         scramble: manualScramble,
         solution: [],
         isManual: true,
-        ...(isRepeatedScramble && { isRepeatedScramble: true }),
       })
-
-      if (!isRepeatedScramble) {
-        addXP(manualTimer.time, true)
-        recordSolve()
-        checkAndUpdateAchievements({
-          totalSolves: userStats.totalSolves + 1,
-        })
-      }
     }
-  }, [manualTimer.status, manualTimerEnabled, manualScramble, isRepeatedScramble, addXP, recordSolve, checkAndUpdateAchievements, userStats.totalSolves, addSolve])
+  }, [manualTimer.status, manualTimer.time, manualTimerEnabled, manualScramble, solveSaved, saveSolve])
 
   const handleSyncCube = useCallback(async () => {
     await resetCubeState()

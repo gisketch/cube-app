@@ -1,0 +1,257 @@
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  type ReactNode,
+} from 'react'
+import { useTimer } from '@/hooks/useTimer'
+import { useManualTimer } from '@/hooks/useManualTimer'
+import { useGyroRecorder } from '@/hooks/useGyroRecorder'
+import { useSolves } from '@/hooks/useSolves'
+import { useExperience } from '@/contexts/ExperienceContext'
+import { useAchievements } from '@/contexts/AchievementsContext'
+import { analyzeCFOP, type CFOPAnalysis } from '@/lib/cfop-analyzer'
+import type { CubeFaces } from '@/lib/cube-faces'
+import type { GyroFrame, MoveFrame } from '@/types'
+
+interface SolveSessionState {
+  scramble: string
+  isRepeatedScramble: boolean
+  solveSaved: boolean
+  lastSolveTime: number
+  lastMoveCount: number
+  lastScramble: string
+  lastAnalysis: CFOPAnalysis | null
+}
+
+interface SolveSessionContextValue {
+  timer: ReturnType<typeof useTimer>
+  manualTimer: ReturnType<typeof useManualTimer>
+  gyroRecorder: ReturnType<typeof useGyroRecorder>
+
+  scramble: string
+  isRepeatedScramble: boolean
+  solveSaved: boolean
+  lastSolveTime: number
+  lastMoveCount: number
+  lastScramble: string
+  lastAnalysis: CFOPAnalysis | null
+
+  manualTimerEnabled: boolean
+  setManualTimerEnabled: (enabled: boolean) => void
+
+  setScramble: (scramble: string) => void
+  setRepeatedScramble: (repeated: boolean) => void
+  markSolveSaved: () => void
+  resetSolveSession: () => void
+
+  saveSolve: (params: {
+    time: number
+    scramble: string
+    solution: string[]
+    states?: CubeFaces[]
+    isManual?: boolean
+    gyroData?: GyroFrame[]
+    moveTimings?: MoveFrame[]
+  }) => void
+
+  scrambleTrigger: number
+  triggerNewScramble: () => void
+}
+
+const SolveSessionContext = createContext<SolveSessionContextValue | null>(null)
+
+export function SolveSessionProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<SolveSessionState>({
+    scramble: '',
+    isRepeatedScramble: false,
+    solveSaved: false,
+    lastSolveTime: 0,
+    lastMoveCount: 0,
+    lastScramble: '',
+    lastAnalysis: null,
+  })
+
+  const [manualTimerEnabled, setManualTimerEnabled] = useState(false)
+  const [scrambleTrigger, setScrambleTrigger] = useState(0)
+
+  const triggerNewScramble = useCallback(() => {
+    setScrambleTrigger((n) => n + 1)
+  }, [])
+
+  const triggerNewScrambleRef = useRef(triggerNewScramble)
+  useEffect(() => {
+    triggerNewScrambleRef.current = triggerNewScramble
+  }, [triggerNewScramble])
+
+  const timer = useTimer()
+  const manualTimer = useManualTimer({
+    enabled: manualTimerEnabled,
+    onNextScramble: () => triggerNewScrambleRef.current(),
+  })
+  const gyroRecorder = useGyroRecorder()
+  const { addSolve } = useSolves()
+  const { addXP } = useExperience()
+  const { recordSolve, checkAndUpdateAchievements, stats: userStats } = useAchievements()
+
+  const setScramble = useCallback((scramble: string) => {
+    setState((prev) => ({ ...prev, scramble, solveSaved: false }))
+  }, [])
+
+  const setRepeatedScramble = useCallback((repeated: boolean) => {
+    setState((prev) => ({ ...prev, isRepeatedScramble: repeated }))
+  }, [])
+
+  const markSolveSaved = useCallback(() => {
+    setState((prev) => ({ ...prev, solveSaved: true }))
+  }, [])
+
+  const resetSolveSession = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      solveSaved: false,
+      lastSolveTime: 0,
+      lastMoveCount: 0,
+      lastAnalysis: null,
+    }))
+    timer.reset()
+    manualTimer.reset()
+  }, [timer, manualTimer])
+
+  const saveSolve = useCallback(
+    ({
+      time,
+      scramble,
+      solution,
+      states,
+      isManual = false,
+      gyroData,
+      moveTimings,
+    }: {
+      time: number
+      scramble: string
+      solution: string[]
+      states?: CubeFaces[]
+      isManual?: boolean
+      gyroData?: GyroFrame[]
+      moveTimings?: MoveFrame[]
+    }) => {
+      if (state.solveSaved) return
+
+      setState((prev) => ({
+        ...prev,
+        solveSaved: true,
+        lastSolveTime: time,
+        lastMoveCount: solution.length,
+        lastScramble: scramble,
+      }))
+
+      let analysis: CFOPAnalysis | null = null
+      if (!isManual && solution.length > 0 && states && states.length > 0) {
+        analysis = analyzeCFOP(solution, states)
+        setState((prev) => ({ ...prev, lastAnalysis: analysis }))
+      }
+
+      addSolve({
+        time,
+        scramble,
+        solution,
+        cfopAnalysis: analysis || undefined,
+        gyroData: gyroData && gyroData.length > 0 ? gyroData : undefined,
+        moveTimings: moveTimings && moveTimings.length > 0 ? moveTimings : undefined,
+        isManual,
+        ...(state.isRepeatedScramble && { isRepeatedScramble: true }),
+      })
+
+      if (!state.isRepeatedScramble) {
+        addXP(time, isManual)
+        recordSolve()
+
+        const statsUpdate: Record<string, number> = {
+          totalSolves: userStats.totalSolves + 1,
+          totalMoves: userStats.totalMoves + solution.length,
+        }
+
+        if (analysis) {
+          if (analysis.oll.skipped) statsUpdate.ollSkips = userStats.ollSkips + 1
+          if (analysis.pll.skipped) statsUpdate.pllSkips = userStats.pllSkips + 1
+          if (analysis.cross.moves.length <= 8)
+            statsUpdate.crossUnder8Moves = userStats.crossUnder8Moves + 1
+        }
+
+        if (solution.length <= 20) statsUpdate.godsNumberSolves = userStats.godsNumberSolves + 1
+        if (time < 20000 && solution.length > 80)
+          statsUpdate.sub20With80Moves = userStats.sub20With80Moves + 1
+
+        checkAndUpdateAchievements(statsUpdate)
+      }
+    },
+    [
+      state.solveSaved,
+      state.isRepeatedScramble,
+      addSolve,
+      addXP,
+      recordSolve,
+      checkAndUpdateAchievements,
+      userStats,
+    ],
+  )
+
+  const value = useMemo<SolveSessionContextValue>(
+    () => ({
+      timer,
+      manualTimer,
+      gyroRecorder,
+
+      scramble: state.scramble,
+      isRepeatedScramble: state.isRepeatedScramble,
+      solveSaved: state.solveSaved,
+      lastSolveTime: state.lastSolveTime,
+      lastMoveCount: state.lastMoveCount,
+      lastScramble: state.lastScramble,
+      lastAnalysis: state.lastAnalysis,
+
+      manualTimerEnabled,
+      setManualTimerEnabled,
+
+      setScramble,
+      setRepeatedScramble,
+      markSolveSaved,
+      resetSolveSession,
+      saveSolve,
+
+      scrambleTrigger,
+      triggerNewScramble,
+    }),
+    [
+      timer,
+      manualTimer,
+      gyroRecorder,
+      state,
+      manualTimerEnabled,
+      setScramble,
+      setRepeatedScramble,
+      markSolveSaved,
+      resetSolveSession,
+      saveSolve,
+      scrambleTrigger,
+      triggerNewScramble,
+    ],
+  )
+
+  return (
+    <SolveSessionContext.Provider value={value}>{children}</SolveSessionContext.Provider>
+  )
+}
+
+export function useSolveSession() {
+  const context = useContext(SolveSessionContext)
+  if (!context) {
+    throw new Error('useSolveSession must be used within a SolveSessionProvider')
+  }
+  return context
+}
