@@ -85,13 +85,21 @@ export function Header({
         >
           <div
             className="flex h-9 w-9 items-center justify-center rounded-lg"
-            style={{ backgroundColor: 'var(--theme-accent)', color: 'var(--theme-bg)' }}
+            style={{ backgroundColor: 'var(--theme-accent)' }}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-              <path d="M12 2L4 8v2c0 1.1.4 2.1 1 3l-1 4c-.2.8.1 1.6.7 2.1.6.5 1.4.7 2.1.4L9 18.5c.9.3 1.9.5 3 .5s2.1-.2 3-.5l2.2 1c.7.3 1.5.1 2.1-.4.6-.5.9-1.3.7-2.1l-1-4c.6-.9 1-1.9 1-3V8l-8-6zm-4 8.5c-.8 0-1.5-.7-1.5-1.5S7.2 7.5 8 7.5s1.5.7 1.5 1.5S8.8 10.5 8 10.5zm8 0c-.8 0-1.5-.7-1.5-1.5S15.2 7.5 16 7.5s1.5.7 1.5 1.5-0.7 1.5-1.5 1.5zm-4 5c-1.1 0-2-.4-2.5-1h5c-.5.6-1.4 1-2.5 1z"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ fill: 'var(--theme-bg)' }}
+            >
+              <path d="M80 40 L95 5 L55 40 Z" />
+              <path d="M20 40 L5 5 L45 40 Z" />
+              <path d="M50 95 L20 40 L80 40 Z" />
             </svg>
           </div>
-          <span>kitsunecube</span>
+          <span>Kitsune Cube</span>
         </button>
 
         <button
@@ -100,17 +108,25 @@ export function Header({
         >
           <div
             className="flex h-7 w-7 items-center justify-center rounded-md"
-            style={{ backgroundColor: 'var(--theme-accent)', color: 'var(--theme-bg)' }}
+            style={{ backgroundColor: 'var(--theme-accent)' }}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-              <path d="M12 2L4 8v2c0 1.1.4 2.1 1 3l-1 4c-.2.8.1 1.6.7 2.1.6.5 1.4.7 2.1.4L9 18.5c.9.3 1.9.5 3 .5s2.1-.2 3-.5l2.2 1c.7.3 1.5.1 2.1-.4.6-.5.9-1.3.7-2.1l-1-4c.6-.9 1-1.9 1-3V8l-8-6zm-4 8.5c-.8 0-1.5-.7-1.5-1.5S7.2 7.5 8 7.5s1.5.7 1.5 1.5S8.8 10.5 8 10.5zm8 0c-.8 0-1.5-.7-1.5-1.5S15.2 7.5 16 7.5s1.5.7 1.5 1.5-0.7 1.5-1.5 1.5zm-4 5c-1.1 0-2-.4-2.5-1h5c-.5.6-1.4 1-2.5 1z"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ fill: 'var(--theme-bg)' }}
+            >
+              <path d="M80 40 L95 5 L55 40 Z" />
+              <path d="M20 40 L5 5 L45 40 Z" />
+              <path d="M50 95 L20 40 L80 40 Z" />
             </svg>
           </div>
           <span
             className="text-sm font-semibold"
             style={{ color: 'var(--theme-accent)' }}
           >
-            kitsunecube
+            Kitsune Cube
           </span>
         </button>
 

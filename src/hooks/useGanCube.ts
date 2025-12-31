@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { connectGanCube, type GanCubeConnection, type GanCubeEvent } from 'gan-web-bluetooth'
 import * as THREE from 'three'
 
+const VALID_MOVE_REGEX = /^[RLUDFB]['2]?$/
+
 export interface GanCubeState {
   isConnected: boolean
   isConnecting: boolean
@@ -55,9 +57,14 @@ export function useGanCube(onMove?: (move: string) => void) {
 
         quaternionRef.current.copy(correctedQuat)
       } else if (event.type === 'MOVE') {
-        const msg = `MOVE: ${event.move} (face: ${event.face}, dir: ${event.direction})`
+        const move = event.move
+        if (!VALID_MOVE_REGEX.test(move)) {
+          addLog(`Invalid move rejected: ${move}`)
+          return
+        }
+        const msg = `MOVE: ${move} (face: ${event.face}, dir: ${event.direction})`
         addLog(msg)
-        onMoveRef.current?.(event.move)
+        onMoveRef.current?.(move)
       } else if (event.type === 'BATTERY') {
         addLog(`Battery: ${event.batteryLevel}%`)
         setState((prev) => ({ ...prev, batteryLevel: event.batteryLevel }))

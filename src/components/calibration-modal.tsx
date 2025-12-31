@@ -107,6 +107,31 @@ export function CalibrationModal({
                 Connect your cube first to enable calibration
               </div>
             )}
+
+            <div
+              className="mt-4 rounded-lg p-3"
+              style={{ backgroundColor: 'var(--theme-bg)' }}
+            >
+              <p
+                className="mb-2 text-xs font-medium"
+                style={{ color: 'var(--theme-text)' }}
+              >
+                Quick Gestures
+              </p>
+              <div className="space-y-1 text-xs" style={{ color: 'var(--theme-sub)' }}>
+                <p>
+                  <span style={{ color: 'var(--theme-accent)' }}>4× U moves</span> — Recalibrate
+                  gyro
+                </p>
+                <p>
+                  <span style={{ color: 'var(--theme-accent)' }}>4× F moves</span> — Sync cube state
+                </p>
+                <p>
+                  <span style={{ color: 'var(--theme-accent)' }}>4× D moves</span> — Generate new
+                  scramble
+                </p>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}

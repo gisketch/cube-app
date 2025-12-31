@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 export type TimerStatus = 'idle' | 'inspection' | 'running' | 'stopped'
 
@@ -45,6 +45,10 @@ export function useTimer() {
     cancelAnimationFrame(animationFrameRef.current)
     setStatus('idle')
     setTime(0)
+  }, [])
+
+  useEffect(() => {
+    return () => cancelAnimationFrame(animationFrameRef.current)
   }, [])
 
   return {

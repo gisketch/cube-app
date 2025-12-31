@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import type { GyroFrame, MoveFrame } from '@/types'
 
 const GYRO_SAMPLE_INTERVAL = 50
+const MAX_GYRO_FRAMES = 2000
 
 export function useGyroRecorder() {
   const isRecordingRef = useRef(false)
@@ -34,6 +35,9 @@ export function useGyroRecorder() {
     const elapsed = now - startTimeRef.current
 
     if (elapsed - lastSampleTimeRef.current >= GYRO_SAMPLE_INTERVAL) {
+      if (gyroFramesRef.current.length >= MAX_GYRO_FRAMES) {
+        gyroFramesRef.current.shift()
+      }
       gyroFramesRef.current.push({
         time: elapsed,
         quaternion: {
