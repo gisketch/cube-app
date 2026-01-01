@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   collection,
+  collectionGroup,
   query,
   orderBy,
+  where,
+  getDocs,
   onSnapshot,
   addDoc,
   deleteDoc,
@@ -238,5 +241,29 @@ export function useSolves() {
     getStats,
     migrateLocalToCloud,
     isCloudSync: !useLocalStorage,
+  }
+}
+
+export async function fetchPublicSolve(solveId: string): Promise<Solve | null> {
+  if (!db || isOfflineMode) {
+    const localSolves = loadLocalSolves()
+    return localSolves.find(s => s.id === solveId) || null
+  }
+
+  try {
+    const solvesGroup = collectionGroup(db, 'solves')
+    const q = query(solvesGroup, where('__name__', '>=', solveId), where('__name__', '<=', solveId + '\uf8ff'))
+    const snapshot = await getDocs(q)
+    
+    for (const docSnap of snapshot.docs) {
+      if (docSnap.id === solveId) {
+        return { id: docSnap.id, ...docSnap.data() } as Solve
+      }
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Failed to fetch public solve:', error)
+    return null
   }
 }

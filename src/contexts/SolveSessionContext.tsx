@@ -14,6 +14,7 @@ import { useGyroRecorder } from '@/hooks/useGyroRecorder'
 import { useSolves } from '@/hooks/useSolves'
 import { useExperience } from '@/contexts/ExperienceContext'
 import { useAchievements } from '@/contexts/AchievementsContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { useSettings } from '@/hooks/useSettings'
 import { analyzeCFOP, type CFOPAnalysis } from '@/lib/cfop-analyzer'
 import type { CubeFaces } from '@/lib/cube-faces'
@@ -103,9 +104,10 @@ export function SolveSessionProvider({ children }: { children: ReactNode }) {
     holdThreshold: settings.holdThreshold,
   })
   const gyroRecorder = useGyroRecorder()
-  const { addSolve } = useSolves()
+  const { addSolve, solves } = useSolves()
   const { addXP } = useExperience()
   const { recordSolve, checkAndUpdateAchievements, stats: userStats } = useAchievements()
+  const { showAchievement, showPersonalBest } = useNotifications()
 
   const setScramble = useCallback((scramble: string) => {
     setState((prev) => ({ ...prev, scramble, solveSaved: false }))
@@ -165,6 +167,15 @@ export function SolveSessionProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({ ...prev, lastAnalysis: analysis }))
       }
 
+      const validSolves = solves.filter(s => !s.dnf && !s.isRepeatedScramble)
+      const currentBest = validSolves.length > 0 
+        ? Math.min(...validSolves.map(s => s.time))
+        : null
+
+      if (!state.isRepeatedScramble && currentBest !== null && time < currentBest) {
+        showPersonalBest(time, currentBest)
+      }
+
       addSolve({
         time,
         scramble,
@@ -196,16 +207,23 @@ export function SolveSessionProvider({ children }: { children: ReactNode }) {
         if (time < 20000 && solution.length > 80)
           statsUpdate.sub20With80Moves = userStats.sub20With80Moves + 1
 
-        checkAndUpdateAchievements(statsUpdate)
+        checkAndUpdateAchievements(statsUpdate).then(unlocks => {
+          unlocks.forEach(unlock => {
+            showAchievement(unlock.achievementId, unlock.tier)
+          })
+        })
       }
     },
     [
       state.solveSaved,
       state.isRepeatedScramble,
+      solves,
       addSolve,
       addXP,
       recordSolve,
       checkAndUpdateAchievements,
+      showAchievement,
+      showPersonalBest,
       userStats,
     ],
   )

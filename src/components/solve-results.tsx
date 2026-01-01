@@ -11,7 +11,6 @@ import {
   Clock,
   Hash,
   Share2,
-  Check,
 } from 'lucide-react'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import * as THREE from 'three'
@@ -21,6 +20,7 @@ import { createSolvedCube, applyMove, cubeFacesToFacelets, COLOR_HEX } from '@/l
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatTime, formatDuration } from '@/lib/format'
 import { useGoals } from '@/contexts/GoalsContext'
+import { useToast } from '@/contexts/ToastContext'
 import type { CFOPAnalysis, CFOPPhase } from '@/lib/cfop-analyzer'
 import type { PhaseGoal } from '@/types/goals'
 import type { KPattern } from 'cubing/kpuzzle'
@@ -655,9 +655,9 @@ export function SolveResults({
   const [playbackSpeed, setPlaybackSpeed] = useState(500)
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0)
   const [displayMode, setDisplayMode] = useState<DisplayMode>('moves')
-  const [copied, setCopied] = useState(false)
 
   const { goals, totalTime: totalTimeGoal } = useGoals()
+  const { showToast } = useToast()
 
   const handleShare = useCallback(async () => {
     const id = solveId || solve?.id
@@ -666,12 +666,11 @@ export function SolveResults({
     const url = `${window.location.origin}/solve/${id}`
     try {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      showToast('Link copied to clipboard!')
     } catch {
-      console.error('Failed to copy to clipboard')
+      showToast('Failed to copy link', 'error')
     }
-  }, [solveId, solve?.id])
+  }, [solveId, solve?.id, showToast])
 
   const hasGyroData = Boolean(solve?.gyroData && solve.gyroData.length > 0)
   const hasMoveTimings = Boolean(solve?.moveTimings && solve.moveTimings.length > 0)
@@ -1602,9 +1601,9 @@ export function SolveResults({
             <ActionButton icon={RotateCcw} onClick={onRepeatScramble} label="Repeat Scramble" />
             {(solveId || solve?.id) && (
               <ActionButton 
-                icon={copied ? Check : Share2} 
+                icon={Share2} 
                 onClick={handleShare} 
-                label={copied ? 'Copied!' : 'Share Solve'} 
+                label="Share Solve" 
               />
             )}
             {!isManual && !solve?.isManual && (

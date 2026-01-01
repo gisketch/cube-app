@@ -9,6 +9,8 @@ import { ExperienceProvider } from '@/contexts/ExperienceContext'
 import { AchievementsProvider } from '@/contexts/AchievementsContext'
 import { GoalsProvider } from '@/contexts/GoalsContext'
 import { SolveSessionProvider } from '@/contexts/SolveSessionContext'
+import { ToastProvider } from '@/contexts/ToastContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 import { ErrorBoundary } from '@/components/error-boundary'
 
 createRoot(document.getElementById('root')!).render(
@@ -16,17 +18,21 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <BrowserRouter>
         <ThemeProvider defaultTheme="dark">
-          <AuthProvider>
-            <ExperienceProvider>
-              <AchievementsProvider>
-                <GoalsProvider>
-                  <SolveSessionProvider>
-                    <App />
-                  </SolveSessionProvider>
-                </GoalsProvider>
-              </AchievementsProvider>
-            </ExperienceProvider>
-          </AuthProvider>
+          <ToastProvider>
+            <NotificationProvider>
+              <AuthProvider>
+                <ExperienceProvider>
+                  <AchievementsProvider>
+                    <GoalsProvider>
+                      <SolveSessionProvider>
+                        <App />
+                      </SolveSessionProvider>
+                    </GoalsProvider>
+                  </AchievementsProvider>
+                </ExperienceProvider>
+              </AuthProvider>
+            </NotificationProvider>
+          </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
     </ErrorBoundary>
