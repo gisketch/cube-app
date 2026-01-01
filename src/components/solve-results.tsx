@@ -10,6 +10,8 @@ import {
   SkipForward,
   Clock,
   Hash,
+  Share2,
+  Check,
 } from 'lucide-react'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import * as THREE from 'three'
@@ -61,6 +63,7 @@ interface SolveResultsProps {
   solve?: Solve
   animationSpeed?: number
   isManual?: boolean
+  solveId?: string
 }
 
 interface PhaseMarker {
@@ -644,6 +647,7 @@ export function SolveResults({
   showBackButton,
   solve,
   isManual,
+  solveId,
 }: SolveResultsProps) {
   const [isReplayMode, setIsReplayMode] = useState(false)
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1)
@@ -651,8 +655,23 @@ export function SolveResults({
   const [playbackSpeed, setPlaybackSpeed] = useState(500)
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0)
   const [displayMode, setDisplayMode] = useState<DisplayMode>('moves')
+  const [copied, setCopied] = useState(false)
 
   const { goals, totalTime: totalTimeGoal } = useGoals()
+
+  const handleShare = useCallback(async () => {
+    const id = solveId || solve?.id
+    if (!id) return
+    
+    const url = `${window.location.origin}/solve/${id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error('Failed to copy to clipboard')
+    }
+  }, [solveId, solve?.id])
 
   const hasGyroData = Boolean(solve?.gyroData && solve.gyroData.length > 0)
   const hasMoveTimings = Boolean(solve?.moveTimings && solve.moveTimings.length > 0)
@@ -1581,6 +1600,13 @@ export function SolveResults({
           >
             <ActionButton icon={ChevronRight} onClick={onNextScramble} label="Next Scramble" />
             <ActionButton icon={RotateCcw} onClick={onRepeatScramble} label="Repeat Scramble" />
+            {(solveId || solve?.id) && (
+              <ActionButton 
+                icon={copied ? Check : Share2} 
+                onClick={handleShare} 
+                label={copied ? 'Copied!' : 'Share Solve'} 
+              />
+            )}
             {!isManual && !solve?.isManual && (
               <>
                 <ActionButton icon={BarChart3} onClick={onViewStats} label="Detailed Stats" />

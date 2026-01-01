@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { StatusBar, CubeConnectionStatus } from '@/components/layout/StatusBar'
@@ -14,11 +15,12 @@ import { AccountPage } from '@/components/account-page'
 import { AchievementsPage } from '@/components/achievements-page'
 import { LeaderboardPage } from '@/components/leaderboard-page'
 import { ManualTimerDisplay } from '@/components/manual-timer-display'
+import { SolvePage } from '@/components/solve-page'
 import { useCubeState } from '@/hooks/useCubeState'
 import { useCubeFaces } from '@/hooks/useCubeFaces'
 import { useGanCube } from '@/hooks/useGanCube'
 import { useScrambleTracker } from '@/hooks/useScrambleTracker'
-import { useSolves, type Solve } from '@/hooks/useSolves'
+import { useSolves } from '@/hooks/useSolves'
 import { useSettings } from '@/hooks/useSettings'
 import { useSolveSession } from '@/contexts/SolveSessionContext'
 import { ConnectionModal } from '@/components/connection-modal'
@@ -32,7 +34,6 @@ import { DEFAULT_CONFIG } from '@/config/scene-config'
 import type { KPattern } from 'cubing/kpuzzle'
 
 type TabType = 'timer' | 'account' | 'achievements' | 'leaderboard' | 'simulator' | 'settings'
-type SolveViewMode = 'list' | 'results' | 'stats' | 'replay'
 
 interface MoveWithTime {
   move: string
@@ -41,12 +42,40 @@ interface MoveWithTime {
 
 const CALIBRATION_SEQUENCE_TIMEOUT = 800
 
+const TAB_TO_PATH: Record<TabType, string> = {
+  timer: '/',
+  account: '/account',
+  achievements: '/achievements',
+  leaderboard: '/leaderboard',
+  simulator: '/simulator',
+  settings: '/settings',
+}
+
+const PATH_TO_TAB: Record<string, TabType> = {
+  '/': 'timer',
+  '/account': 'account',
+  '/achievements': 'achievements',
+  '/leaderboard': 'leaderboard',
+  '/simulator': 'simulator',
+  '/settings': 'settings',
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('timer')
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  const activeTab = useMemo(() => {
+    const path = location.pathname
+    if (path.startsWith('/solve/')) return 'account'
+    return PATH_TO_TAB[path] || 'timer'
+  }, [location.pathname])
+
+  const handleNavigate = useCallback((tab: TabType) => {
+    navigate(TAB_TO_PATH[tab])
+  }, [navigate])
+
   const [_isScrambling, setIsScrambling] = useState(false)
   const [frozenPattern, setFrozenPattern] = useState<KPattern | null>(null)
-  const [selectedSolve, setSelectedSolve] = useState<Solve | null>(null)
-  const [solveViewMode, setSolveViewMode] = useState<SolveViewMode>('list')
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const cubeRef = useRef<RubiksCubeRef>(null)
   const recentMovesRef = useRef<MoveWithTime[]>([])
@@ -468,7 +497,7 @@ function App() {
         />
 
         <Header
-          onNavigate={setActiveTab}
+          onNavigate={handleNavigate}
           isConnected={isConnected}
           isConnecting={isConnecting}
           onConnect={connect}
@@ -479,125 +508,101 @@ function App() {
         />
 
         <main className="flex flex-1 flex-col min-h-0">
-          {activeTab === 'timer' ? (
-            <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
-              <StatusBar
-                solves={solves}
-                batteryLevel={batteryLevel}
-                isConnected={isConnected}
-                isConnecting={isConnecting}
-                onConnect={connect}
-                onOpenCubeInfo={handleOpenCubeInfo}
-                inspectionTime={settings.inspectionTime}
-                customInspectionTime={settings.customInspectionTime}
-                onInspectionChange={(time) => updateSetting('inspectionTime', time)}
-              />
-              {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
-                <SolveResults
-                  time={lastSolveTime}
-                  moves={lastMoveCount}
-                  analysis={lastAnalysis}
-                  onNextScramble={handleNewScramble}
-                  onRepeatScramble={handleRepeatScramble}
-                  onViewStats={() => {
-                    if (solves.length > 0) {
-                      setSelectedSolve(solves[0])
-                      setSolveViewMode('stats')
-                      setActiveTab('account')
-                    }
-                  }}
-                  scramble={lastScramble}
-                  solve={solves.length > 0 ? solves[0] : undefined}
-                  isManual={manualTimerEnabled}
+          <Routes>
+            <Route path="/" element={
+              <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
+                <StatusBar
+                  solves={solves}
+                  batteryLevel={batteryLevel}
+                  isConnected={isConnected}
+                  isConnecting={isConnecting}
+                  onConnect={connect}
+                  onOpenCubeInfo={handleOpenCubeInfo}
+                  inspectionTime={settings.inspectionTime}
+                  customInspectionTime={settings.customInspectionTime}
+                  onInspectionChange={(time) => updateSetting('inspectionTime', time)}
                 />
-              ) : (
-                <>
-                  <ScrambleNotation
-                    trackerState={scrambleState}
-                    timerStatus={timer.status}
-                    time={timer.time}
+                {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
+                  <SolveResults
+                    time={lastSolveTime}
+                    moves={lastMoveCount}
+                    analysis={lastAnalysis}
+                    onNextScramble={handleNewScramble}
+                    onRepeatScramble={handleRepeatScramble}
+                    onViewStats={() => {
+                      if (solves.length > 0) {
+                        navigate(`/solve/${solves[0].id}`)
+                      }
+                    }}
+                    scramble={lastScramble}
+                    solve={solves.length > 0 ? solves[0] : undefined}
                     isManual={manualTimerEnabled}
-                    manualScramble={manualScramble}
-                    isRepeatedScramble={isRepeatedScramble}
-                    inspectionRemaining={timer.inspectionRemaining}
                   />
-
-                  {manualTimerEnabled ? (
-                    <ManualTimerDisplay
-                      status={manualTimer.status}
-                      time={manualTimer.time}
-                      inspectionRemaining={manualTimer.inspectionRemaining}
-                      onConnect={connect}
+                ) : (
+                  <>
+                    <ScrambleNotation
+                      trackerState={scrambleState}
+                      timerStatus={timer.status}
+                      time={timer.time}
+                      isManual={manualTimerEnabled}
+                      manualScramble={manualScramble}
+                      isRepeatedScramble={isRepeatedScramble}
+                      inspectionRemaining={timer.inspectionRemaining}
                     />
-                  ) : (
-                    <div className="relative aspect-square w-full max-w-[240px] md:max-w-sm">
-                      {!isLoading && (
-                        <CubeViewer
-                          pattern={frozenPattern}
-                          quaternionRef={quaternionRef}
-                          cubeRef={cubeRef}
-                          config={DEFAULT_CONFIG}
-                          animationSpeed={settings.animationSpeed}
-                          cubeColors={cubeColors}
-                        />
-                      )}
-                    </div>
-                  )}
 
-                  <CubeConnectionStatus
-                    batteryLevel={batteryLevel}
-                    isConnected={isConnected}
-                    isConnecting={isConnecting}
-                    onConnect={connect}
-                    onOpenCubeInfo={handleOpenCubeInfo}
-                  />
+                    {manualTimerEnabled ? (
+                      <ManualTimerDisplay
+                        status={manualTimer.status}
+                        time={manualTimer.time}
+                        inspectionRemaining={manualTimer.inspectionRemaining}
+                        onConnect={connect}
+                      />
+                    ) : (
+                      <div className="relative aspect-square w-full max-w-[240px] md:max-w-sm">
+                        {!isLoading && (
+                          <CubeViewer
+                            pattern={frozenPattern}
+                            quaternionRef={quaternionRef}
+                            cubeRef={cubeRef}
+                            config={DEFAULT_CONFIG}
+                            animationSpeed={settings.animationSpeed}
+                            cubeColors={cubeColors}
+                          />
+                        )}
+                      </div>
+                    )}
 
-                  <RecentSolves solves={solves} />
-                </>
-              )}
-            </div>
-          ) : activeTab === 'account' ? (
-            solveViewMode === 'results' && selectedSolve ? (
-              <SolveResults
-                time={selectedSolve.time}
-                moves={selectedSolve.solution.length}
-                analysis={selectedSolve.cfopAnalysis || null}
-                scramble={selectedSolve.scramble}
-                showBackButton
-                onBack={() => {
-                  setSelectedSolve(null)
-                  setSolveViewMode('list')
-                }}
-                onRepeatScramble={() => {
-                  setScramble(selectedSolve.scramble)
-                  setSelectedSolve(null)
-                  setSolveViewMode('list')
-                  setActiveTab('timer')
-                }}
-                solve={selectedSolve}
-              />
-            ) : (
+                    <CubeConnectionStatus
+                      batteryLevel={batteryLevel}
+                      isConnected={isConnected}
+                      isConnecting={isConnecting}
+                      onConnect={connect}
+                      onOpenCubeInfo={handleOpenCubeInfo}
+                    />
+
+                    <RecentSolves solves={solves} />
+                  </>
+                )}
+              </div>
+            } />
+            <Route path="/account" element={
               <AccountPage
                 solves={solves}
                 onDeleteSolve={deleteSolve}
-                onViewSolveDetails={(solve) => {
-                  setSelectedSolve(solve)
-                  setSolveViewMode('results')
-                }}
+                onViewSolveDetails={(solve) => navigate(`/solve/${solve.id}`)}
               />
-            )
-          ) : activeTab === 'achievements' ? (
-            <AchievementsPage />
-          ) : activeTab === 'leaderboard' ? (
-            <LeaderboardPage />
-          ) : activeTab === 'simulator' ? (
-            <Simulator />
-          ) : (
-            <SettingsPanel
-              onMigrateToCloud={migrateLocalToCloud}
-              isCloudSync={isCloudSync}
-            />
-          )}
+            } />
+            <Route path="/solve/:solveId" element={<SolvePage />} />
+            <Route path="/achievements" element={<AchievementsPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/simulator" element={<Simulator />} />
+            <Route path="/settings" element={
+              <SettingsPanel
+                onMigrateToCloud={migrateLocalToCloud}
+                isCloudSync={isCloudSync}
+              />
+            } />
+          </Routes>
         </main>
 
         <div className="hidden md:block mt-auto">
@@ -619,7 +624,7 @@ function App() {
               connect()
             }
           }}
-          onNavigate={setActiveTab}
+          onNavigate={handleNavigate}
           isConnected={isConnected}
         />
       </div>

@@ -8,13 +8,15 @@ A modern Rubik's Cube timer application that connects to GAN Smart Cubes via Blu
 
 1. [Application Flow](#application-flow)
 2. [Entry Point & Providers](#entry-point--providers)
-3. [Core State Management](#core-state-management)
-4. [Hooks Reference](#hooks-reference)
-5. [Library Modules](#library-modules)
-6. [Components](#components)
-7. [Contexts](#contexts)
-8. [Types](#types)
-9. [Data Flow Diagrams](#data-flow-diagrams)
+3. [Routing](#routing)
+4. [Core State Management](#core-state-management)
+5. [Hooks Reference](#hooks-reference)
+6. [Library Modules](#library-modules)
+7. [Components](#components)
+8. [Contexts](#contexts)
+9. [Goals System](#goals-system)
+10. [Types](#types)
+11. [Data Flow Diagrams](#data-flow-diagrams)
 
 ---
 
@@ -69,13 +71,52 @@ The application entry point that sets up the React tree with all context provide
 ```
 StrictMode
 └── ErrorBoundary        → Catches and displays React errors
-    └── ThemeProvider    → Manages dark/light themes and custom themes
-        └── AuthProvider → Firebase authentication state
-            └── ExperienceProvider → XP/leveling system
-                └── AchievementsProvider → Achievement tracking
-                    └── SolveSessionProvider → Core solve session state
-                        └── App
+    └── BrowserRouter    → React Router for URL-based navigation
+        └── ThemeProvider    → Manages dark/light themes and custom themes
+            └── AuthProvider → Firebase authentication state
+                └── ExperienceProvider → XP/leveling system
+                    └── AchievementsProvider → Achievement tracking
+                        └── GoalsProvider → CFOP and total time goals
+                            └── SolveSessionProvider → Core solve session state
+                                └── App
 ```
+
+---
+
+## Routing
+
+The application uses React Router for URL-based navigation instead of state-based tab switching.
+
+### Routes
+
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | Timer View | Main timer view with scramble, cube, and solve session |
+| `/account` | AccountPage | User profile, CFOP stats widget, and solve history |
+| `/achievements` | AchievementsPage | Achievement gallery and progress tracking |
+| `/leaderboard` | LeaderboardPage | Global leaderboard rankings |
+| `/simulator` | Simulator | Interactive 3D cube simulator |
+| `/settings` | SettingsPanel | Application settings |
+| `/solve/:solveId` | SolvePage | Individual solve details with shareable URL |
+
+### Navigation
+
+Navigation is handled via `useNavigate()` hook. The sidebar and header use path mappings:
+
+```typescript
+const TAB_TO_PATH: Record<TabType, string> = {
+  timer: '/',
+  account: '/account',
+  achievements: '/achievements',
+  leaderboard: '/leaderboard',
+  simulator: '/simulator',
+  settings: '/settings'
+}
+```
+
+### Shareable Solve URLs
+
+Each solve can be shared via URL. The SolveResults component includes a share button that copies the solve URL (`/solve/:solveId`) to clipboard.
 
 ---
 
@@ -83,19 +124,13 @@ StrictMode
 
 ### App.tsx - Main Orchestrator
 
-The central hub that coordinates all hooks and manages the solve lifecycle:
-
-| State | Purpose |
-|-------|---------|
-| `activeTab` | Current navigation tab (timer/account/simulator/settings) |
-| `frozenPattern` | KPattern snapshot for 3D cube rendering |
-| `selectedSolve` | Currently selected solve for detail view |
-| `solveViewMode` | View mode for solve details (list/results/stats/replay) |
+The central hub that coordinates all hooks and manages the solve lifecycle. Uses React Router's `useLocation()` to determine current view.
 
 **Key Callbacks:**
 - `handleMove(move)` - Processes moves from smart cube, updates all state systems
 - `handleNewScramble()` - Generates new scramble, resets solve session
 - `handleSyncCube()` - Resets internal cube state to solved
+- `handleNavigate(tab)` - Navigates to route using `useNavigate()`
 - `checkCalibrationSequence(move)` - Detects gesture sequences (4x U/F/D moves)
 
 **Calibration Gestures:**
@@ -414,6 +449,7 @@ function isSameFace(a: ParsedMove, b: ParsedMove): boolean
 | `LeaderboardPage` | `src/components/leaderboard-page.tsx` | Community leaderboards |
 | `Simulator` | `src/components/simulator.tsx` | CFOP algorithm simulator |
 | `SettingsPanel` | `src/components/settings-panel.tsx` | Theme and animation settings |
+| `SolvePage` | `src/components/solve-page.tsx` | Individual solve view accessed via URL |
 
 ### Modal Components
 
@@ -476,6 +512,55 @@ XP and leveling system for gamification.
 **Location:** `src/contexts/AchievementsContext.tsx`
 
 Achievement tracking and unlocking.
+
+### GoalsContext.tsx
+**Location:** `src/contexts/GoalsContext.tsx`
+
+User-defined goals for CFOP phases and total solve time.
+
+---
+
+## Goals System
+
+The goals system allows users to set target times for CFOP phases and total solve time.
+
+### Goal Types
+
+| Goal | Description |
+|------|-------------|
+| Cross | Target time for cross phase |
+| F2L | Target time for First Two Layers phase |
+| OLL | Target time for Orientation of Last Layer phase |
+| PLL | Target time for Permutation of Last Layer phase |
+| Total Time | Target time for overall solve |
+
+### Presets
+
+Pre-configured goal sets are available in `src/types/goals.ts`:
+
+```typescript
+const GOAL_PRESETS = {
+  beginner: { cross: 8000, f2l: 40000, oll: 8000, pll: 8000 },
+  intermediate: { cross: 3000, f2l: 20000, oll: 4000, pll: 4000 },
+  advanced: { cross: 1500, f2l: 10000, oll: 2000, pll: 2000 },
+  expert: { cross: 1000, f2l: 6000, oll: 1500, pll: 1500 }
+}
+
+const TOTAL_TIME_PRESETS = {
+  beginner: 60000,      // 1 minute
+  intermediate: 40000,  // 40 seconds
+  advanced: 25000,      // 25 seconds
+  'sub-20': 20000,      // 20 seconds
+  'sub-15': 15000       // 15 seconds
+}
+```
+
+### Goal Achievement Indicator
+
+The solve results display shows goal achievement status:
+- **Green arrow down** with time difference: Faster than goal
+- **Red arrow up** with time difference: Slower than goal
+- **No indicator**: No goal set for that phase
 
 ---
 
@@ -590,27 +675,29 @@ localStorage / Firebase
 ```
 App.tsx
 ├── Header
-│   └── Navigation Tabs
-├── Main Content (based on activeTab)
-│   ├── Timer View
+│   └── Navigation (uses useNavigate)
+├── Routes (React Router)
+│   ├── / → Timer View
 │   │   ├── ScrambleNotation
 │   │   ├── CubeViewer (3D)
 │   │   ├── TimerDisplay / ManualTimerDisplay
 │   │   ├── SolveResults (after solve)
 │   │   └── RecentSolves
-│   ├── AccountPage
+│   ├── /account → AccountPage
 │   │   ├── CFOPStatsWidget
 │   │   └── SolvesList
-│   ├── AchievementsPage
-│   ├── LeaderboardPage
-│   ├── Simulator
-│   └── SettingsPanel
+│   ├── /achievements → AchievementsPage
+│   ├── /leaderboard → LeaderboardPage
+│   ├── /simulator → Simulator
+│   ├── /settings → SettingsPanel
+│   └── /solve/:solveId → SolvePage
 ├── StatusBar
 ├── Footer
 └── Modals
     ├── ConnectionModal
     ├── CalibrationModal
     ├── CubeInfoModal
+    ├── SetGoalsModal
     └── CommandPalette
 ```
 
@@ -644,8 +731,10 @@ src/
 │   ├── calibration-modal.tsx
 │   ├── connection-modal.tsx
 │   ├── scramble-notation.tsx
+│   ├── set-goals-modal.tsx
 │   ├── settings-panel.tsx
 │   ├── simulator.tsx
+│   ├── solve-page.tsx
 │   ├── solve-results.tsx
 │   ├── timer-display.tsx
 │   └── ...
@@ -677,10 +766,13 @@ src/
 │   ├── SolveSessionContext.tsx
 │   ├── AuthContext.tsx
 │   ├── ExperienceContext.tsx
-│   └── AchievementsContext.tsx
+│   ├── AchievementsContext.tsx
+│   └── GoalsContext.tsx
 │
 ├── types/
 │   ├── index.ts               # Central type definitions
+│   ├── achievements.ts
+│   └── goals.ts               # Goals and presets types
 │   └── achievements.ts
 │
 └── config/
