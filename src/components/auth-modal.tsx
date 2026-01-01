@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Mail, Lock, User, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,9 +20,33 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   
   const { signInWithGoogle, signInWithEmail, registerWithEmail, resetPassword } = useAuth()
   const { showToast } = useToast()
+
+  useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus()
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   const resetForm = () => {
     setEmail('')
@@ -105,38 +129,45 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
           onClick={handleClose}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
+            ref={modalRef}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
+            className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 pb-safe shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
             style={{ backgroundColor: 'var(--theme-bg)' }}
           >
             <button
+              ref={closeButtonRef}
               onClick={handleClose}
-              className="absolute right-4 top-4 rounded-lg p-2 transition-colors hover:opacity-70"
+              className="absolute right-4 top-4 rounded-lg p-2 transition-colors hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-offset-2"
               style={{ color: 'var(--theme-sub)' }}
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-6">
+            <div className="mb-6 pr-8">
               {mode !== 'login' && (
                 <button
                   onClick={() => { setMode('login'); setError(null) }}
-                  className="mb-4 flex items-center gap-1 text-sm transition-colors hover:opacity-70"
+                  className="mb-4 flex items-center gap-1 text-sm transition-colors hover:opacity-70 focus:outline-none focus:underline"
                   style={{ color: 'var(--theme-sub)' }}
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                   Back to sign in
                 </button>
               )}
-              <h2 className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>
+              <h2 id="auth-modal-title" className="text-2xl font-bold" style={{ color: 'var(--theme-text)' }}>
                 {mode === 'login' && 'Sign In'}
                 {mode === 'register' && 'Create Account'}
                 {mode === 'reset' && 'Reset Password'}
@@ -148,29 +179,31 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </p>
             </div>
 
-            {error && (
-              <div 
-                className="mb-4 rounded-lg px-4 py-3 text-sm"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
-              >
-                {error}
-              </div>
-            )}
+            <div 
+              role="alert"
+              aria-live="polite"
+              className={`mb-4 rounded-lg px-4 py-3 text-sm ${error ? 'block' : 'hidden'}`}
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+            >
+              {error}
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+                  <label htmlFor="auth-display-name" className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
                     Display Name (optional)
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} />
+                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} aria-hidden="true" />
                     <input
+                      id="auth-display-name"
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Your name"
-                      className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current"
+                      autoComplete="name"
+                      className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current focus:ring-2 focus:ring-offset-1"
                       style={{ 
                         backgroundColor: 'var(--theme-subAlt)', 
                         borderColor: 'var(--theme-subAlt)',
@@ -182,18 +215,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               )}
 
               <div>
-                <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+                <label htmlFor="auth-email" className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} />
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} aria-hidden="true" />
                   <input
+                    id="auth-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
-                    className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current"
+                    autoComplete="email"
+                    className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current focus:ring-2 focus:ring-offset-1"
                     style={{ 
                       backgroundColor: 'var(--theme-subAlt)', 
                       borderColor: 'var(--theme-subAlt)',
@@ -205,19 +240,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
               {mode !== 'reset' && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+                  <label htmlFor="auth-password" className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} />
+                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} aria-hidden="true" />
                     <input
+                      id="auth-password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
                       minLength={6}
-                      className="w-full rounded-lg border py-3 pl-10 pr-12 text-sm outline-none transition-colors focus:border-current"
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      className="w-full rounded-lg border py-3 pl-10 pr-12 text-sm outline-none transition-colors focus:border-current focus:ring-2 focus:ring-offset-1"
                       style={{ 
                         backgroundColor: 'var(--theme-subAlt)', 
                         borderColor: 'var(--theme-subAlt)',
@@ -227,10 +264,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 focus:outline-none focus:ring-2 rounded"
                       style={{ color: 'var(--theme-sub)' }}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
                     </button>
                   </div>
                 </div>
@@ -238,19 +276,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
               {mode === 'register' && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
+                  <label htmlFor="auth-confirm-password" className="mb-1 block text-sm font-medium" style={{ color: 'var(--theme-sub)' }}>
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} />
+                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--theme-sub)' }} aria-hidden="true" />
                     <input
+                      id="auth-confirm-password"
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       required
                       minLength={6}
-                      className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current"
+                      autoComplete="new-password"
+                      className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:border-current focus:ring-2 focus:ring-offset-1"
                       style={{ 
                         backgroundColor: 'var(--theme-subAlt)', 
                         borderColor: 'var(--theme-subAlt)',

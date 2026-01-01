@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, type ReactNode, type ComponentType, type SVGProps } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, AlertCircle, Info } from 'lucide-react'
 
@@ -18,7 +18,9 @@ const ToastContext = createContext<ToastContextType | null>(null)
 
 const TOAST_DURATION = 3000
 
-const iconMap: Record<ToastType, React.ElementType> = {
+type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>
+
+const iconMap: Record<ToastType, IconComponent> = {
   success: Check,
   error: AlertCircle,
   info: Info,
