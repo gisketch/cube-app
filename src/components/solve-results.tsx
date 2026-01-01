@@ -11,6 +11,7 @@ import {
   Clock,
   Hash,
   Share2,
+  Trash2,
 } from 'lucide-react'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import * as THREE from 'three'
@@ -18,6 +19,7 @@ import { CubeViewer, type RubiksCubeRef } from '@/components/cube'
 import { DEFAULT_CONFIG } from '@/config/scene-config'
 import { createSolvedCube, applyMove, cubeFacesToFacelets, COLOR_HEX } from '@/lib/cube-faces'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ConfirmDeleteModal } from '@/components/confirm-delete-modal'
 import { formatTime, formatDuration } from '@/lib/format'
 import { useGoals } from '@/contexts/GoalsContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -55,6 +57,7 @@ interface SolveResultsProps {
   onViewStats?: () => void
   onWatchReplay?: () => void
   onBack?: () => void
+  onDeleteSolve?: (id: string) => void
   pattern?: KPattern | null
   quaternionRef?: MutableRefObject<Quaternion>
   cubeRef?: MutableRefObject<RubiksCubeRef | null>
@@ -695,6 +698,7 @@ export function SolveResults({
   onViewStats,
   onWatchReplay,
   onBack,
+  onDeleteSolve,
   scramble,
   showBackButton,
   solve,
@@ -708,6 +712,7 @@ export function SolveResults({
   const [playbackSpeed, setPlaybackSpeed] = useState(500)
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0)
   const [displayMode, setDisplayMode] = useState<DisplayMode>('moves')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const { goals: userGoals, totalTime: userTotalTimeGoal } = useGoals()
   const { showToast } = useToast()
@@ -1678,9 +1683,27 @@ export function SolveResults({
                 )}
               </>
             )}
+            {onDeleteSolve && (solveId || solve?.id) && (
+              <ActionButton 
+                icon={Trash2} 
+                onClick={() => setShowDeleteConfirm(true)} 
+                label="Delete Solve" 
+              />
+            )}
           </motion.div>
         </motion.div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          const id = solveId || solve?.id
+          if (id && onDeleteSolve) {
+            onDeleteSolve(id)
+          }
+        }}
+      />
     </TooltipProvider>
   )
 }

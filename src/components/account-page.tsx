@@ -731,8 +731,8 @@ export function AccountPage({ solves, onDeleteSolve, onViewSolveDetails }: Accou
   const hasVerifiedSolves = verifiedSolves.length > 0
   const [verifiedOnly, setVerifiedOnly] = useState(hasVerifiedSolves)
   
-  const displayedSolves = verifiedOnly ? verifiedSolves : solves
-  const stats = useMemo(() => calculateStats(displayedSolves), [displayedSolves])
+  const statsSolves = useMemo(() => verifiedOnly ? verifiedSolves : solves, [verifiedOnly, verifiedSolves, solves])
+  const stats = useMemo(() => calculateStats(statsSolves), [statsSolves])
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false)
 
   return (
@@ -793,11 +793,11 @@ export function AccountPage({ solves, onDeleteSolve, onViewSolveDetails }: Accou
           <StatCard label="Mean" value={stats.mean ? formatTime(stats.mean) : null} />
         </div>
 
-        <CFOPStatsWidget solves={displayedSolves} onSetGoals={() => setIsGoalsModalOpen(true)} />
+        <CFOPStatsWidget solves={statsSolves} onSetGoals={() => setIsGoalsModalOpen(true)} />
 
-        <ActivityCalendar solves={displayedSolves} />
+        <ActivityCalendar solves={statsSolves} />
 
-        <SolveChart solves={displayedSolves} />
+        <SolveChart solves={statsSolves} />
 
         <div
           className="rounded-xl p-3 sm:p-4"
@@ -807,10 +807,10 @@ export function AccountPage({ solves, onDeleteSolve, onViewSolveDetails }: Accou
             className="mb-3 sm:mb-4 text-xs sm:text-sm font-medium uppercase tracking-wider"
             style={{ color: 'var(--theme-sub)' }}
           >
-            Solve History ({displayedSolves.length} {verifiedOnly ? 'verified' : 'total'})
+            Solve History ({solves.length} total)
           </h3>
           <SolvesList
-            solves={displayedSolves}
+            solves={solves}
             onDelete={onDeleteSolve}
             onViewDetails={onViewSolveDetails}
             hideStats

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Trash2, BarChart3, Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Solve } from '@/hooks/useSolves'
+import { ConfirmDeleteModal } from '@/components/confirm-delete-modal'
 import { createSolvedCube, applyMove, COLOR_HEX, type CubeFaces } from '@/lib/cube-faces'
 
 const ITEMS_PER_PAGE = 50
@@ -274,6 +275,20 @@ function SolveRow({
 export function SolvesList({ solves, onDelete, onViewDetails, hideStats }: SolvesListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<Set<'manual' | 'verified' | 'repeated'>>(new Set())
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; solveId: string | null }>({ 
+    isOpen: false, 
+    solveId: null 
+  })
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm({ isOpen: true, solveId: id })
+  }
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirm.solveId && onDelete) {
+      onDelete(deleteConfirm.solveId)
+    }
+  }
 
   const toggleFilter = (filter: 'manual' | 'verified' | 'repeated') => {
     setFilters(prev => {
@@ -401,7 +416,7 @@ export function SolvesList({ solves, onDelete, onViewDetails, hideStats }: Solve
                 solve={solve}
                 index={pageStartIndex + index}
                 total={filteredSolves.length}
-                onDelete={onDelete}
+                onDelete={onDelete ? handleDeleteClick : undefined}
                 onViewDetails={onViewDetails}
               />
             ))}
@@ -412,6 +427,11 @@ export function SolvesList({ solves, onDelete, onViewDetails, hideStats }: Solve
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+      <ConfirmDeleteModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, solveId: null })}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   )

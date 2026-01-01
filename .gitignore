@@ -8,6 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 .env.local
 
+# Service account keys (sensitive!)
+scripts/service-account.json
+**/service-account*.json
+
 node_modules
 dist
 dist-ssr

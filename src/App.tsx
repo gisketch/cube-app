@@ -542,6 +542,10 @@ function App() {
                         navigate(`/solve/${solves[0].id}`)
                       }
                     }}
+                    onDeleteSolve={(id) => {
+                      deleteSolve(id)
+                      handleNewScramble()
+                    }}
                     scramble={lastScramble}
                     solve={solves.length > 0 ? solves[0] : undefined}
                     isManual={manualTimerEnabled}

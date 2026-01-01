@@ -8,7 +8,7 @@ import type { Solve } from '@/types'
 export function SolvePage() {
   const { userId, solveId } = useParams<{ userId?: string; solveId: string }>()
   const navigate = useNavigate()
-  const { solves } = useSolves()
+  const { solves, deleteSolve } = useSolves()
   const { setScramble } = useScrambleTracker()
   const [publicSolve, setPublicSolve] = useState<Solve | null>(null)
   const [loading, setLoading] = useState(true)
@@ -79,6 +79,10 @@ export function SolvePage() {
         setScramble(solve.scramble)
         navigate('/')
       }}
+      onDeleteSolve={localSolve ? async (id) => {
+        await deleteSolve(id)
+        navigate('/')
+      } : undefined}
       solve={solve}
       solveId={solveId}
       isOwner={!!localSolve}
