@@ -257,6 +257,8 @@ export async function fetchPublicSolve(solveId: string): Promise<Solve | null> {
     const q = query(solvesGroup, where('solveId', '==', solveId))
     const snapshot = await getDocs(q)
     
+    console.log('fetchPublicSolve query for:', solveId, 'found:', snapshot.size, 'docs')
+    
     if (!snapshot.empty) {
       const docSnap = snapshot.docs[0]
       return { id: docSnap.id, ...docSnap.data() } as Solve

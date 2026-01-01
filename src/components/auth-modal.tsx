@@ -6,6 +6,9 @@ import { useToast } from '@/contexts/ToastContext'
 
 type AuthMode = 'login' | 'register' | 'reset'
 
+const MAX_NAME_LENGTH = 20
+const VALID_NAME_REGEX = /^[a-zA-Z0-9_\- ]+$/
+
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
@@ -84,7 +87,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setLoading(false)
           return
         }
-        await registerWithEmail(email, password, displayName || undefined)
+        const trimmedName = displayName.trim()
+        if (trimmedName && trimmedName.length > MAX_NAME_LENGTH) {
+          setError(`Name must be ${MAX_NAME_LENGTH} characters or less`)
+          setLoading(false)
+          return
+        }
+        if (trimmedName && !VALID_NAME_REGEX.test(trimmedName)) {
+          setError('Name can only contain letters, numbers, spaces, hyphens, and underscores')
+          setLoading(false)
+          return
+        }
+        await registerWithEmail(email, password, trimmedName || undefined)
         showToast('Account created successfully!')
         handleClose()
       } else if (mode === 'reset') {
