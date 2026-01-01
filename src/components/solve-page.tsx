@@ -81,6 +81,7 @@ export function SolvePage() {
       }}
       solve={solve}
       solveId={solveId}
+      isOwner={!!localSolve}
     />
   )
 }
