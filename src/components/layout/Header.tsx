@@ -19,10 +19,12 @@ import {
   LogOut,
   Cloud,
   CloudOff,
+  Bell,
 } from 'lucide-react'
 import { ProfileMenu } from '@/components/profile-menu'
 import { AuthModal } from '@/components/auth-modal'
 import { useAuth } from '@/contexts/AuthContext'
+import { useChangelog } from '@/contexts/ChangelogContext'
 
 interface HeaderProps {
   onNavigate: (page: 'timer' | 'account' | 'achievements' | 'leaderboard' | 'simulator' | 'settings') => void
@@ -55,6 +57,7 @@ export function Header({
   isCloudSync,
 }: HeaderProps) {
   const { user, logout } = useAuth()
+  const { hasUnread, openChangelog } = useChangelog()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
@@ -146,6 +149,20 @@ export function Header({
         </button>
 
         <div className="hidden items-center gap-2 md:flex">
+          <button
+            onClick={openChangelog}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:opacity-80"
+            style={{ backgroundColor: 'var(--theme-subAlt)' }}
+            title="What's New"
+          >
+            <Bell className="h-4 w-4" style={{ color: 'var(--theme-text)' }} />
+            {hasUnread && (
+              <span
+                className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: 'var(--theme-error)' }}
+              />
+            )}
+          </button>
           <button
             onClick={() => onNavigate('leaderboard')}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:opacity-80"
@@ -250,6 +267,33 @@ export function Header({
                   <span>{item.label}</span>
                 </button>
               ))}
+              <button
+                onClick={() => { openChangelog(); setIsMobileMenuOpen(false) }}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-colors"
+                style={{
+                  color: 'var(--theme-text)',
+                  backgroundColor: 'var(--theme-bgSecondary)',
+                }}
+              >
+                <div className="relative">
+                  <Bell className="h-4 w-4" style={{ color: 'var(--theme-accent)' }} />
+                  {hasUnread && (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full"
+                      style={{ backgroundColor: 'var(--theme-error)' }}
+                    />
+                  )}
+                </div>
+                <span>What's New</span>
+                {hasUnread && (
+                  <span
+                    className="ml-auto rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: 'var(--theme-error)', color: 'var(--theme-bg)' }}
+                  >
+                    New
+                  </span>
+                )}
+              </button>
 
               <div className="my-2 h-px" style={{ backgroundColor: 'var(--theme-subAlt)' }} />
 
