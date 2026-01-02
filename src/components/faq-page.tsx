@@ -16,7 +16,7 @@ const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'Which smart cubes are supported?',
     answer:
-      'Currently, all GAN smart cubes are fully supported (GAN 12 UI, GAN 356i V3, GAN 356i Carry, GAN 356i Play, etc.). Support for MoYu, QiYi, and Giiker cubes is in development. You can also use the app without a smart cube using the manual timer mode.',
+      'We support most popular smart cubes including GAN (12 UI, 356i V3, 356i Carry, 356i Play), MoYu (AI series), QiYi, and GiiKER cubes. GAN cubes have full support including gyroscope features, while other brands are in active development. You can also use the app without a smart cube using the manual timer mode.',
   },
   {
     question: 'Do I need a smart cube to use Kitsune Cube?',
@@ -31,17 +31,17 @@ const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'Which browsers are supported?',
     answer:
-      'Smart cube connectivity requires the Web Bluetooth API, which is only available in Chromium-based browsers (Google Chrome, Microsoft Edge, Brave, Opera). Safari and Firefox are not currently supported for smart cube features, but manual timer mode works in all browsers.',
+      'To connect your smart cube, you need a browser that supports Bluetooth connections. Google Chrome, Microsoft Edge, Brave, and Opera all work great! Unfortunately, Safari and Firefox can\'t connect to smart cubes yet—but don\'t worry, you can still use the manual timer with any browser. If you\'re on an iPhone or iPad, smart cube features aren\'t available yet due to Apple\'s restrictions, but manual timer mode works perfectly.',
   },
   {
-    question: 'How do I connect my GAN smart cube?',
+    question: 'How do I connect my smart cube?',
     answer:
-      'Click the "Connect Cube" button in the app, then put your cube into pairing mode (usually by shaking it or holding the power button). Select your cube from the Bluetooth device list. Some cubes may require entering a MAC address—check your cube\'s documentation.',
+      'It\'s easy! 1) Click the "Connect Cube" button and choose your cube brand (GAN, MoYu, QiYi, or GiiKER). 2) Wake up your cube by rotating any side. 3) When the Bluetooth popup appears, look for your cube in the list (it might show as your brand name followed by some numbers). 4) Click on your cube and then click "Pair". That\'s it! If the app asks for a MAC address, don\'t worry—there\'s a step-by-step guide right in the popup to help you find it.',
   },
   {
     question: 'Why is my cube not connecting?',
     answer:
-      'Make sure Bluetooth is enabled on your device and you\'re using a supported browser (Chrome, Edge, Brave). Ensure your cube is charged and in pairing mode. Try refreshing the page or restarting your browser. If problems persist, join our Discord for support.',
+      'Here are some quick fixes to try: 1) Make sure your cube is turned on—rotate a side to wake it up. 2) Keep your cube close to your device (within a few feet). 3) Check that Bluetooth is turned on in your device settings. 4) Try using Chrome, Edge, or Brave browser if you\'re not already. 5) Refresh the page and try again. 6) If your cube was connected to another app, close that app first. Still stuck? Join our Discord and we\'ll help you out!',
   },
   {
     question: 'How does the CFOP analysis work?',

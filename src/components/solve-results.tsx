@@ -711,8 +711,15 @@ export function SolveResults({
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(500)
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0)
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('moves')
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
+    const saved = localStorage.getItem('solve-results-display-mode')
+    return (saved === 'moves' || saved === 'time') ? saved : 'moves'
+  })
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  useEffect(() => {
+    localStorage.setItem('solve-results-display-mode', displayMode)
+  }, [displayMode])
 
   const { goals: userGoals, totalTime: userTotalTimeGoal } = useGoals()
   const { showToast } = useToast()

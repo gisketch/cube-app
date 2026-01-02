@@ -13,13 +13,13 @@ interface SEOConfig {
 const PAGE_SEO: Record<string, SEOConfig> = {
   '/': {
     title: 'Kitsune Cube 🦊 - The Gamified Smart Cube Timer',
-    description: 'The ultimate smart cube training app. Built by a cuber, for cubers. Connect your GAN smart cube, track solves with CFOP analysis, earn achievements, compete on leaderboards, and watch replays.',
-    keywords: 'rubiks cube, smart cube, speedcubing, GAN cube, CFOP, cube timer, cube analyzer, speedcube timer, gamified cubing',
+    description: 'The ultimate smart cube training app. Built by a cuber, for cubers. Connect your smart cube, track solves with CFOP analysis, earn achievements, compete on leaderboards, and watch replays.',
+    keywords: 'rubiks cube, smart cube, speedcubing, GAN cube, MoYu cube, QiYi cube, CFOP, cube timer, cube analyzer, speedcube timer, gamified cubing',
   },
   '/app': {
     title: 'Timer - Kitsune Cube',
-    description: 'Connect your GAN smart cube and start solving. Real-time move tracking, CFOP analysis, and instant replays.',
-    keywords: 'cube timer, smart cube timer, GAN cube timer, speedcubing timer, CFOP timer',
+    description: 'Connect your smart cube and start solving. Real-time move tracking, CFOP analysis, and instant replays. Supports GAN, MoYu, QiYi, and GiiKER cubes.',
+    keywords: 'cube timer, smart cube timer, GAN cube timer, MoYu cube timer, speedcubing timer, CFOP timer',
   },
   '/app/account': {
     title: 'My Account - Kitsune Cube',
@@ -49,7 +49,7 @@ const PAGE_SEO: Record<string, SEOConfig> = {
   '/app/faq': {
     title: 'FAQ - Kitsune Cube',
     description: 'Frequently asked questions about Kitsune Cube. Learn about supported cubes, features, connectivity, and more.',
-    keywords: 'kitsune cube faq, smart cube help, GAN cube setup, troubleshooting, cubing questions',
+    keywords: 'kitsune cube faq, smart cube help, smart cube setup, troubleshooting, cubing questions',
   },
 }
 
