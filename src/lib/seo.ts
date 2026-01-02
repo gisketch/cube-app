@@ -12,36 +12,41 @@ interface SEOConfig {
 
 const PAGE_SEO: Record<string, SEOConfig> = {
   '/': {
-    title: 'Kitsune Cube 🦊 - Gamified Smart Cube Companion for Speedcubers',
-    description: 'The ultimate smart cube training app. Connect your GAN smart cube, track solves with CFOP analysis, earn achievements, compete on leaderboards, and watch replays with gyroscope support.',
-    keywords: 'rubiks cube, smart cube, speedcubing, GAN cube, CFOP, cube timer, cube analyzer, speedcube timer',
+    title: 'Kitsune Cube 🦊 - The Gamified Smart Cube Timer',
+    description: 'The ultimate smart cube training app. Built by a cuber, for cubers. Connect your GAN smart cube, track solves with CFOP analysis, earn achievements, compete on leaderboards, and watch replays.',
+    keywords: 'rubiks cube, smart cube, speedcubing, GAN cube, CFOP, cube timer, cube analyzer, speedcube timer, gamified cubing',
   },
-  '/account': {
+  '/app': {
+    title: 'Timer - Kitsune Cube',
+    description: 'Connect your GAN smart cube and start solving. Real-time move tracking, CFOP analysis, and instant replays.',
+    keywords: 'cube timer, smart cube timer, GAN cube timer, speedcubing timer, CFOP timer',
+  },
+  '/app/account': {
     title: 'My Account - Kitsune Cube',
     description: 'View your solve history, statistics, and personal bests. Track your progress over time with detailed analytics.',
     keywords: 'cube statistics, solve history, personal best, cubing progress, speed cube stats',
   },
-  '/achievements': {
+  '/app/achievements': {
     title: 'Achievements - Kitsune Cube',
     description: 'Unlock tiered achievements for your cubing milestones. From beginner to legend, earn Bronze, Silver, Gold, Diamond, and Obsidian badges.',
     keywords: 'cube achievements, speedcubing badges, cubing milestones, unlock achievements, gamified cubing',
   },
-  '/leaderboard': {
+  '/app/leaderboard': {
     title: 'Leaderboards - Kitsune Cube',
     description: 'Compete with speedcubers worldwide. View global rankings by average time, level, achievements, and single solve records.',
     keywords: 'cube leaderboard, speedcubing ranking, fastest cubers, cube competition, global rankings',
   },
-  '/simulator': {
+  '/app/simulator': {
     title: 'CFOP Simulator - Kitsune Cube',
     description: 'Analyze any solve without a smart cube. Input scramble and solution to see CFOP phase breakdown and move counts.',
     keywords: 'CFOP analyzer, cube simulator, solve analysis, algorithm analyzer, cubing tools',
   },
-  '/settings': {
+  '/app/settings': {
     title: 'Settings - Kitsune Cube',
     description: 'Customize your Kitsune Cube experience. Themes, animation speed, inspection timer, and more.',
     keywords: 'cube timer settings, theme customization, app preferences',
   },
-  '/faq': {
+  '/app/faq': {
     title: 'FAQ - Kitsune Cube',
     description: 'Frequently asked questions about Kitsune Cube. Learn about supported cubes, features, connectivity, and more.',
     keywords: 'kitsune cube faq, smart cube help, GAN cube setup, troubleshooting, cubing questions',
@@ -67,7 +72,7 @@ function updateMetaTag(property: string, content: string, isProperty = false) {
 }
 
 function updateCanonical(path: string) {
-  const canonicalUrl = `https://kitsunecube.app${path}`
+  const canonicalUrl = `https://kitsunecube.com${path}`
   let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
   
   if (!link) {
@@ -83,7 +88,9 @@ export function useSEO(customConfig?: Partial<SEOConfig>) {
   const location = useLocation()
   
   useEffect(() => {
-    const basePath = location.pathname.split('/').slice(0, 2).join('/') || '/'
+    const basePath = location.pathname.startsWith('/app') 
+      ? location.pathname.split('/').slice(0, 3).join('/') 
+      : '/'
     const pageConfig = PAGE_SEO[basePath] || DEFAULT_SEO
     const config = { ...pageConfig, ...customConfig }
     
@@ -96,7 +103,7 @@ export function useSEO(customConfig?: Partial<SEOConfig>) {
     
     updateMetaTag('og:title', config.title, true)
     updateMetaTag('og:description', config.description, true)
-    updateMetaTag('og:url', `https://kitsunecube.app${location.pathname}`, true)
+    updateMetaTag('og:url', `https://kitsunecube.com${location.pathname}`, true)
     if (config.ogType) {
       updateMetaTag('og:type', config.ogType, true)
     }

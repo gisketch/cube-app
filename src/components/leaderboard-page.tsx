@@ -27,7 +27,9 @@ import {
   Zap,
   BarChart3,
   Play,
+  HelpCircle,
 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatTime } from '@/lib/format'
 import { getLevelFromXP } from '@/lib/experience'
@@ -78,7 +80,7 @@ export function LeaderboardPage() {
   const isUserTab = tab !== 'singleSolve'
 
   const handleViewSolve = useCallback((solve: LeaderboardSolve) => {
-    navigate(`/solve/${solve.ownerId}/${solve.solveId}`)
+    navigate(`/app/solve/${solve.ownerId}/${solve.solveId}`)
   }, [navigate])
 
   const resetPagination = useCallback(() => {
@@ -151,9 +153,9 @@ export function LeaderboardPage() {
         level,
         totalXP,
         achievementsCompleted,
-        avgSolveTime: stats.verifiedAvgSolveTime ?? stats.avgSolveTime ?? null,
-        bestSolveTime: stats.verifiedBestSolveTime ?? stats.bestSolveTime ?? null,
-        totalSolves: stats.verifiedTotalSolves || stats.totalSolves || 0,
+        avgSolveTime: stats.verifiedAvgSolveTime ?? null,
+        bestSolveTime: stats.verifiedBestSolveTime ?? null,
+        totalSolves: stats.verifiedTotalSolves || 0,
       })
     }
 
@@ -340,6 +342,7 @@ export function LeaderboardPage() {
               currentUserId={user?.uid}
               getRankIcon={getRankIcon}
               getPrimaryValue={getUserPrimaryValue}
+              tab={tab}
             />
           )
         ) : solves.length === 0 ? (
@@ -361,19 +364,45 @@ export function LeaderboardPage() {
 }
 
 function UserLeaderboardHeader({ tab }: { tab: LeaderboardTab }) {
+  const showAvgColumn = tab !== 'avgTime'
+  
   return (
-    <div
-      className="grid grid-cols-[32px_1fr_50px_50px] sm:grid-cols-[50px_1fr_90px_90px_100px] gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-medium uppercase tracking-wider"
-      style={{ backgroundColor: 'var(--theme-bg)', color: 'var(--theme-sub)' }}
-    >
-      <div>#</div>
-      <div>User</div>
-      <div className="text-right">Avg</div>
-      <div className="text-right hidden sm:block">Best</div>
-      <div className="text-right">
-        {tab === 'avgTime' ? 'Avg' : tab === 'achievements' ? 'Bdg' : 'Lvl'}
+    <TooltipProvider>
+      <div
+        className={`grid gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs font-medium uppercase tracking-wider ${showAvgColumn ? 'grid-cols-[32px_1fr_50px_50px] sm:grid-cols-[50px_1fr_90px_90px_100px]' : 'grid-cols-[32px_1fr_50px] sm:grid-cols-[50px_1fr_90px_100px]'}`}
+        style={{ backgroundColor: 'var(--theme-bg)', color: 'var(--theme-sub)' }}
+      >
+        <div>#</div>
+        <div>User</div>
+        {showAvgColumn && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-right flex items-center justify-end gap-0.5 cursor-help">
+                Avg
+                <HelpCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-[200px] text-xs">Verified average from smart cube solves only (tracked moves, not manual timer)</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="text-right hidden sm:flex items-center justify-end gap-0.5 cursor-help">
+              Best
+              <HelpCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-[200px] text-xs">Best single solve time (verified smart cube solves only)</p>
+          </TooltipContent>
+        </Tooltip>
+        <div className="text-right">
+          {tab === 'avgTime' ? 'Avg' : tab === 'achievements' ? 'Bdg' : 'Lvl'}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
 
@@ -398,6 +427,7 @@ interface UserLeaderboardBodyProps {
   currentUserId?: string
   getRankIcon: (index: number) => React.ReactNode
   getPrimaryValue: (u: LeaderboardUser) => string
+  tab: LeaderboardTab
 }
 
 function UserLeaderboardBody({
@@ -405,7 +435,10 @@ function UserLeaderboardBody({
   currentUserId,
   getRankIcon,
   getPrimaryValue,
+  tab,
 }: UserLeaderboardBodyProps) {
+  const showAvgColumn = tab !== 'avgTime'
+  
   return (
     <div className="divide-y" style={{ borderColor: 'var(--theme-subAlt)' }}>
       {users.map((u, index) => {
@@ -413,7 +446,7 @@ function UserLeaderboardBody({
         return (
           <div
             key={u.id}
-            className="grid grid-cols-[32px_1fr_50px_50px] sm:grid-cols-[50px_1fr_90px_90px_100px] gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 items-center transition-colors"
+            className={`grid gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 items-center transition-colors ${showAvgColumn ? 'grid-cols-[32px_1fr_50px_50px] sm:grid-cols-[50px_1fr_90px_90px_100px]' : 'grid-cols-[32px_1fr_50px] sm:grid-cols-[50px_1fr_90px_100px]'}`}
             style={{
               backgroundColor: isCurrentUser ? 'var(--theme-accent)10' : 'transparent',
               borderLeft: isCurrentUser ? '3px solid var(--theme-accent)' : '3px solid transparent',
@@ -444,9 +477,11 @@ function UserLeaderboardBody({
                 </span>
               </div>
             </div>
-            <div className="text-right font-mono text-[10px] sm:text-sm" style={{ color: 'var(--theme-text)' }}>
-              {u.avgSolveTime ? formatTime(u.avgSolveTime) : '-'}
-            </div>
+            {showAvgColumn && (
+              <div className="text-right font-mono text-[10px] sm:text-sm" style={{ color: 'var(--theme-text)' }}>
+                {u.avgSolveTime ? formatTime(u.avgSolveTime) : '-'}
+              </div>
+            )}
             <div className="text-right font-mono text-[10px] sm:text-sm hidden sm:block" style={{ color: 'var(--theme-sub)' }}>
               {u.bestSolveTime ? formatTime(u.bestSolveTime) : '-'}
             </div>

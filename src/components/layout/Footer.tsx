@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Mail, MessageCircle, Heart, Github, HelpCircle, GitBranch } from 'lucide-react'
+import { MessageCircle, Heart, HelpCircle, GitBranch, ExternalLink } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { VERSION, getVersionString } from '@/lib/version'
 
@@ -13,11 +13,10 @@ export function Footer() {
       }}
     >
       <div className="flex items-center gap-6">
-        <FooterLink icon={HelpCircle} label="faq" href="/faq" internal />
-        <FooterLink icon={Mail} label="contact" href="mailto:dev@gisketch.com" />
-        <FooterLink icon={MessageCircle} label="discord" href="https://discord.gg/XPQr4wpQVg" />
         <FooterLink icon={Heart} label="support" href="https://ko-fi.com/gisketch" accent />
-        <FooterLink icon={Github} label="source" href="https://github.com/gisketch/kitsune-cube" />
+        <FooterLink icon={ExternalLink} label="website" href="/" internal />
+        <FooterLink icon={HelpCircle} label="faq" href="/app/faq" internal />
+        <FooterLink icon={MessageCircle} label="discord" href="https://discord.gg/XPQr4wpQVg" />
       </div>
 
       <div className="flex items-center gap-2">
@@ -44,13 +43,16 @@ export function Footer() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span
-                className="flex cursor-default items-center gap-1"
+              <a
+                href="https://github.com/gisketch/kitsune-cube"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 transition-colors hover:opacity-80"
                 style={{ color: 'var(--theme-sub)' }}
               >
                 <GitBranch className="h-3.5 w-3.5" />
                 <span>{getVersionString()}</span>
-              </span>
+              </a>
             </TooltipTrigger>
             <TooltipContent>
               <p>Build {VERSION.commitHash} • {VERSION.commitDate}</p>
@@ -98,7 +100,7 @@ function FooterLink({
   accent,
   internal,
 }: {
-  icon: typeof Mail
+  icon: typeof Heart
   label: string
   href: string
   accent?: boolean

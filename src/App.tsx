@@ -49,21 +49,21 @@ interface MoveWithTime {
 const CALIBRATION_SEQUENCE_TIMEOUT = 800
 
 const TAB_TO_PATH: Record<TabType, string> = {
-  timer: '/',
-  account: '/account',
-  achievements: '/achievements',
-  leaderboard: '/leaderboard',
-  simulator: '/simulator',
-  settings: '/settings',
+  timer: '/app',
+  account: '/app/account',
+  achievements: '/app/achievements',
+  leaderboard: '/app/leaderboard',
+  simulator: '/app/simulator',
+  settings: '/app/settings',
 }
 
 const PATH_TO_TAB: Record<string, TabType> = {
-  '/': 'timer',
-  '/account': 'account',
-  '/achievements': 'achievements',
-  '/leaderboard': 'leaderboard',
-  '/simulator': 'simulator',
-  '/settings': 'settings',
+  '/app': 'timer',
+  '/app/account': 'account',
+  '/app/achievements': 'achievements',
+  '/app/leaderboard': 'leaderboard',
+  '/app/simulator': 'simulator',
+  '/app/settings': 'settings',
 }
 
 function App() {
@@ -72,7 +72,7 @@ function App() {
   
   const activeTab = useMemo(() => {
     const path = location.pathname
-    if (path.startsWith('/solve/')) return 'account'
+    if (path.startsWith('/app/solve/')) return 'account'
     return PATH_TO_TAB[path] || 'timer'
   }, [location.pathname])
 
@@ -563,7 +563,7 @@ function App() {
 
         <main className="flex flex-1 flex-col min-h-0">
           <Routes>
-            <Route path="/" element={
+            <Route index element={
               <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
                 <StatusBar
                   solves={solves}
@@ -585,7 +585,7 @@ function App() {
                     onRepeatScramble={handleRepeatScramble}
                     onViewStats={() => {
                       if (solves.length > 0) {
-                        navigate(`/solve/${solves[0].id}`)
+                        navigate(`/app/solve/${solves[0].id}`)
                       }
                     }}
                     onDeleteSolve={(id) => {
@@ -643,25 +643,25 @@ function App() {
                 )}
               </div>
             } />
-            <Route path="/account" element={
+            <Route path="account" element={
               <AccountPage
                 solves={solves}
                 onDeleteSolve={deleteSolve}
-                onViewSolveDetails={(solve) => navigate(`/solve/${solve.id}`)}
+                onViewSolveDetails={(solve) => navigate(`/app/solve/${solve.id}`)}
               />
             } />
-            <Route path="/solve/:solveId" element={<SolvePage />} />
-            <Route path="/solve/:userId/:solveId" element={<SolvePage />} />
-            <Route path="/achievements" element={<AchievementsPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/simulator" element={<Simulator />} />
-            <Route path="/settings" element={
+            <Route path="solve/:solveId" element={<SolvePage />} />
+            <Route path="solve/:userId/:solveId" element={<SolvePage />} />
+            <Route path="achievements" element={<AchievementsPage />} />
+            <Route path="leaderboard" element={<LeaderboardPage />} />
+            <Route path="simulator" element={<Simulator />} />
+            <Route path="settings" element={
               <SettingsPanel
                 onMigrateToCloud={migrateLocalToCloud}
                 isCloudSync={isCloudSync}
               />
             } />
-            <Route path="/faq" element={<FAQPage />} />
+            <Route path="faq" element={<FAQPage />} />
           </Routes>
         </main>
 
@@ -696,4 +696,5 @@ function App() {
   )
 }
 
+export { App as TimerApp }
 export default App

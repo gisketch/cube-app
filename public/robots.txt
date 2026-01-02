@@ -1,5 +1,5 @@
 # Kitsune Cube - robots.txt
-# https://kitsunecube.app
+# https://kitsunecube.com
 
 User-agent: *
 Allow: /
@@ -21,7 +21,7 @@ User-agent: YandexBot
 Allow: /
 
 # Sitemap location
-Sitemap: https://kitsunecube.app/sitemap.xml
+Sitemap: https://kitsunecube.com/sitemap.xml
 
 # Crawl-delay for considerate crawling
 Crawl-delay: 1

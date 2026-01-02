@@ -121,6 +121,130 @@ function StatCard({ label, value, highlight }: { label: string; value: string | 
   )
 }
 
+function AllTimeAverageWidget({ solves }: { solves: Solve[] }) {
+  const verifiedSolves = useMemo(() => solves.filter(s => !s.isManual && !s.dnf), [solves])
+  const allSolves = useMemo(() => solves.filter(s => !s.dnf), [solves])
+
+  const verifiedTimes = useMemo(() => 
+    verifiedSolves.map(s => s.plusTwo ? s.time + 2000 : s.time),
+    [verifiedSolves]
+  )
+  const allTimes = useMemo(() => 
+    allSolves.map(s => s.plusTwo ? s.time + 2000 : s.time),
+    [allSolves]
+  )
+
+  const verifiedAvg = verifiedTimes.length > 0 
+    ? verifiedTimes.reduce((a, b) => a + b, 0) / verifiedTimes.length 
+    : null
+  const verifiedBest = verifiedTimes.length > 0 ? Math.min(...verifiedTimes) : null
+
+  const allAvg = allTimes.length > 0 
+    ? allTimes.reduce((a, b) => a + b, 0) / allTimes.length 
+    : null
+  const allBest = allTimes.length > 0 ? Math.min(...allTimes) : null
+
+  return (
+    <div
+      className="rounded-xl p-3 sm:p-4"
+      style={{ backgroundColor: 'var(--theme-bgSecondary)' }}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h3
+          className="text-xs sm:text-sm font-medium uppercase tracking-wider"
+          style={{ color: 'var(--theme-sub)' }}
+        >
+          All-Time Statistics
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className="rounded-lg p-3 cursor-help"
+                style={{ backgroundColor: 'var(--theme-bg)', border: '1px solid var(--theme-accent)' }}
+              >
+                <div className="flex items-center gap-1 mb-2">
+                  <span className="text-[10px] sm:text-xs uppercase" style={{ color: 'var(--theme-accent)' }}>
+                    Verified
+                  </span>
+                  <HelpCircle className="h-2.5 w-2.5" style={{ color: 'var(--theme-accent)' }} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Avg</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--theme-text)' }}>
+                      {verifiedAvg ? formatTime(verifiedAvg) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Best</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--theme-accent)' }}>
+                      {verifiedBest ? formatTime(verifiedBest) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Solves</span>
+                    <span className="font-mono text-xs" style={{ color: 'var(--theme-sub)' }}>
+                      {verifiedSolves.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Smart cube solves with tracked moves</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className="rounded-lg p-3 cursor-help"
+                style={{ backgroundColor: 'var(--theme-bg)' }}
+              >
+                <div className="flex items-center gap-1 mb-2">
+                  <span className="text-[10px] sm:text-xs uppercase" style={{ color: 'var(--theme-sub)' }}>
+                    All Solves
+                  </span>
+                  <HelpCircle className="h-2.5 w-2.5" style={{ color: 'var(--theme-sub)' }} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Avg</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--theme-text)' }}>
+                      {allAvg ? formatTime(allAvg) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Best</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--theme-text)' }}>
+                      {allBest ? formatTime(allBest) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px]" style={{ color: 'var(--theme-sub)' }}>Solves</span>
+                    <span className="font-mono text-xs" style={{ color: 'var(--theme-sub)' }}>
+                      {allSolves.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">All solves including manual timer entries</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
+  )
+}
+
 interface CFOPStats {
   avgCross: number | null
   avgF2L: number | null
@@ -427,16 +551,19 @@ function ActivityCalendar({ solves }: { solves: Solve[] }) {
               className="grid w-full"
               style={{ 
                 gridTemplateColumns: `repeat(53, 1fr)`,
-                gap: '4px',
+                gap: '2px',
               }}
             >
               {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col" style={{ gap: '4px' }}>
+                <div key={weekIndex} className="flex flex-col" style={{ gap: '2px' }}>
                   {week.map((day, dayIndex) => (
                     <div
                       key={dayIndex}
-                      className="w-full aspect-square rounded-[3px] transition-all cursor-pointer"
+                      className="w-full transition-all cursor-pointer"
                       style={{
+                        aspectRatio: '1',
+                        minHeight: '4px',
+                        borderRadius: '2px',
                         backgroundColor: day.future 
                           ? 'transparent' 
                           : day.count === 0 
@@ -792,6 +919,8 @@ export function AccountPage({ solves, onDeleteSolve, onViewSolveDetails }: Accou
           <StatCard label="ao100" value={stats.ao100 ? formatTime(stats.ao100) : null} />
           <StatCard label="Mean" value={stats.mean ? formatTime(stats.mean) : null} />
         </div>
+
+        <AllTimeAverageWidget solves={solves} />
 
         <CFOPStatsWidget solves={statsSolves} onSetGoals={() => setIsGoalsModalOpen(true)} />
 

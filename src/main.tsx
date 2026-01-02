@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
-import App from '@/App'
+import { AppRoot } from '@/AppRoot'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ExperienceProvider } from '@/contexts/ExperienceContext'
@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(
                   <AchievementsProvider>
                     <GoalsProvider>
                       <SolveSessionProvider>
-                        <App />
+                        <AppRoot />
                       </SolveSessionProvider>
                     </GoalsProvider>
                   </AchievementsProvider>
