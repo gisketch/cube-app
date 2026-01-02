@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { Header } from '@/components/layout/Header'
 import { Footer, MobileFooter } from '@/components/layout/Footer'
-import { StatusBar, CubeConnectionStatus } from '@/components/layout/StatusBar'
+import { StatusBar, CubeConnectionStatus, BatteryStatus } from '@/components/layout/StatusBar'
 import { KeyboardHints } from '@/components/keyboard-hints'
 import { CommandPalette } from '@/components/command-palette'
 import { CubeViewer, type RubiksCubeRef, type CubeColors } from '@/components/cube'
@@ -18,6 +18,9 @@ import { LeaderboardPage } from '@/components/leaderboard-page'
 import { ManualTimerDisplay } from '@/components/manual-timer-display'
 import { SolvePage } from '@/components/solve-page'
 import { FAQPage } from '@/components/faq-page'
+import { SolvesListSidebar } from '@/components/solves-list-sidebar'
+import { ScrambleWidget } from '@/components/scramble-widget'
+import { StatsWidget, MobileStatsButton } from '@/components/stats-widget'
 import { SEOHead } from '@/lib/seo'
 import { useCubeState } from '@/hooks/useCubeState'
 import { useCubeFaces } from '@/hooks/useCubeFaces'
@@ -47,6 +50,7 @@ interface MoveWithTime {
 }
 
 const CALIBRATION_SEQUENCE_TIMEOUT = 800
+
 
 const TAB_TO_PATH: Record<TabType, string> = {
   timer: '/app',
@@ -564,84 +568,269 @@ function App() {
         <main className="flex flex-1 flex-col min-h-0">
           <Routes>
             <Route index element={
-              <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
-                <StatusBar
-                  solves={solves}
-                  batteryLevel={batteryLevel}
-                  isConnected={isConnected}
-                  isConnecting={isConnecting}
-                  onConnect={connect}
-                  onOpenCubeInfo={handleOpenCubeInfo}
-                  inspectionTime={settings.inspectionTime}
-                  customInspectionTime={settings.customInspectionTime}
-                  onInspectionChange={(time) => updateSetting('inspectionTime', time)}
-                />
-                {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
-                  <SolveResults
-                    time={lastSolveTime}
-                    moves={lastMoveCount}
-                    analysis={lastAnalysis}
-                    onNextScramble={handleNewScramble}
-                    onRepeatScramble={handleRepeatScramble}
-                    onViewStats={() => {
-                      if (solves.length > 0) {
-                        navigate(`/app/solve/${solves[0].id}`)
-                      }
-                    }}
-                    onDeleteSolve={(id) => {
-                      deleteSolve(id)
-                      handleNewScramble()
-                    }}
-                    scramble={lastScramble}
-                    solve={solves.length > 0 ? solves[0] : undefined}
-                    isManual={manualTimerEnabled}
-                  />
-                ) : (
-                  <>
-                    <ScrambleNotation
-                      trackerState={scrambleState}
-                      timerStatus={timer.status}
-                      time={timer.time}
-                      isManual={manualTimerEnabled}
-                      manualScramble={manualScramble}
-                      isRepeatedScramble={isRepeatedScramble}
-                      inspectionRemaining={timer.inspectionRemaining}
-                    />
+              settings.timerLayoutMode === 'detailed' ? (
+                <div className="flex flex-1 flex-col px-4 pt-2 md:px-6">
+                  {/* Desktop: 3-column layout */}
+                  <div className="hidden flex-1 gap-4 md:grid md:grid-cols-[minmax(160px,240px)_1fr_minmax(180px,260px)]">
+                    {/* Left sidebar: Solves list - hidden when showing results */}
+                    <div className="flex min-w-0 flex-col overflow-hidden">
+                      {!((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) && (
+                        <SolvesListSidebar solves={solves} maxItems={12} />
+                      )}
+                    </div>
 
-                    {manualTimerEnabled ? (
-                      <ManualTimerDisplay
-                        status={manualTimer.status}
-                        time={manualTimer.time}
-                        inspectionRemaining={manualTimer.inspectionRemaining}
-                        onConnect={connect}
+                    {/* Center: Timer area */}
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <StatusBar
+                        solves={solves}
+                        inspectionTime={settings.inspectionTime}
+                        customInspectionTime={settings.customInspectionTime}
+                        onInspectionChange={(time) => updateSetting('inspectionTime', time)}
+                        layoutMode={settings.timerLayoutMode}
+                        onLayoutModeChange={(mode) => updateSetting('timerLayoutMode', mode)}
+                      />
+                      {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
+                        <SolveResults
+                          time={lastSolveTime}
+                          moves={lastMoveCount}
+                          analysis={lastAnalysis}
+                          onNextScramble={handleNewScramble}
+                          onRepeatScramble={handleRepeatScramble}
+                          onViewStats={() => {
+                            if (solves.length > 0) {
+                              navigate(`/app/solve/${solves[0].id}`)
+                            }
+                          }}
+                          onDeleteSolve={(id) => {
+                            deleteSolve(id)
+                            handleNewScramble()
+                          }}
+                          scramble={lastScramble}
+                          solve={solves.length > 0 ? solves[0] : undefined}
+                          isManual={manualTimerEnabled}
+                        />
+                      ) : (
+                        <>
+                          <ScrambleNotation
+                            trackerState={scrambleState}
+                            timerStatus={timer.status}
+                            time={timer.time}
+                            isManual={manualTimerEnabled}
+                            manualScramble={manualScramble}
+                            isRepeatedScramble={isRepeatedScramble}
+                            inspectionRemaining={timer.inspectionRemaining}
+                          />
+
+                          {manualTimerEnabled ? (
+                            <ManualTimerDisplay
+                              status={manualTimer.status}
+                              time={manualTimer.time}
+                              inspectionRemaining={manualTimer.inspectionRemaining}
+                              onConnect={connect}
+                            />
+                          ) : (
+                            <div className="relative aspect-square w-full max-w-sm">
+                              {!isLoading && (
+                                <CubeViewer
+                                  pattern={frozenPattern}
+                                  quaternionRef={quaternionRef}
+                                  cubeRef={cubeRef}
+                                  config={DEFAULT_CONFIG}
+                                  animationSpeed={settings.animationSpeed}
+                                  cubeColors={cubeColors}
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          <BatteryStatus
+                            batteryLevel={batteryLevel}
+                            isConnected={isConnected}
+                            onOpenCubeInfo={handleOpenCubeInfo}
+                          />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Right sidebar: Stats and Scramble preview - hidden when showing results */}
+                    <div className="flex min-w-0 flex-col gap-4 overflow-hidden">
+                      {!((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) && (
+                        <>
+                          <StatsWidget
+                            solves={solves}
+                            isVisible={settings.showStatsWidget}
+                            onToggleVisibility={() => updateSetting('showStatsWidget', !settings.showStatsWidget)}
+                          />
+                          <ScrambleWidget scramble={manualScramble} compact />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile: Single column layout */}
+                  <div className="flex flex-1 flex-col items-center gap-2 md:hidden">
+                    <StatusBar
+                      solves={solves}
+                      inspectionTime={settings.inspectionTime}
+                      customInspectionTime={settings.customInspectionTime}
+                      onInspectionChange={(time) => updateSetting('inspectionTime', time)}
+                      layoutMode={settings.timerLayoutMode}
+                      onLayoutModeChange={(mode) => updateSetting('timerLayoutMode', mode)}
+                    />
+                    {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
+                      <SolveResults
+                        time={lastSolveTime}
+                        moves={lastMoveCount}
+                        analysis={lastAnalysis}
+                        onNextScramble={handleNewScramble}
+                        onRepeatScramble={handleRepeatScramble}
+                        onViewStats={() => {
+                          if (solves.length > 0) {
+                            navigate(`/app/solve/${solves[0].id}`)
+                          }
+                        }}
+                        onDeleteSolve={(id) => {
+                          deleteSolve(id)
+                          handleNewScramble()
+                        }}
+                        scramble={lastScramble}
+                        solve={solves.length > 0 ? solves[0] : undefined}
+                        isManual={manualTimerEnabled}
                       />
                     ) : (
-                      <div className="relative aspect-square w-full max-w-[240px] md:max-w-sm">
-                        {!isLoading && (
-                          <CubeViewer
-                            pattern={frozenPattern}
-                            quaternionRef={quaternionRef}
-                            cubeRef={cubeRef}
-                            config={DEFAULT_CONFIG}
-                            animationSpeed={settings.animationSpeed}
-                            cubeColors={cubeColors}
+                      <>
+                        <ScrambleNotation
+                          trackerState={scrambleState}
+                          timerStatus={timer.status}
+                          time={timer.time}
+                          isManual={manualTimerEnabled}
+                          manualScramble={manualScramble}
+                          isRepeatedScramble={isRepeatedScramble}
+                          inspectionRemaining={timer.inspectionRemaining}
+                        />
+
+                        <div className="flex items-center gap-3">
+                          <ScrambleWidget scramble={manualScramble} compact />
+                        </div>
+
+                        {manualTimerEnabled ? (
+                          <ManualTimerDisplay
+                            status={manualTimer.status}
+                            time={manualTimer.time}
+                            inspectionRemaining={manualTimer.inspectionRemaining}
+                            onConnect={connect}
                           />
+                        ) : (
+                          <div className="relative aspect-square w-full max-w-[240px]">
+                            {!isLoading && (
+                              <CubeViewer
+                                pattern={frozenPattern}
+                                quaternionRef={quaternionRef}
+                                cubeRef={cubeRef}
+                                config={DEFAULT_CONFIG}
+                                animationSpeed={settings.animationSpeed}
+                                cubeColors={cubeColors}
+                              />
+                            )}
+                          </div>
                         )}
-                      </div>
+
+                        <CubeConnectionStatus
+                          batteryLevel={batteryLevel}
+                          isConnected={isConnected}
+                          isConnecting={isConnecting}
+                          onConnect={connect}
+                          onOpenCubeInfo={handleOpenCubeInfo}
+                        />
+
+                        <MobileStatsButton
+                          solves={solves}
+                          isVisible={settings.showStatsWidget}
+                          onToggleVisibility={() => updateSetting('showStatsWidget', !settings.showStatsWidget)}
+                        />
+
+                        <RecentSolves solves={solves} />
+                      </>
                     )}
-
-                    <CubeConnectionStatus
-                      batteryLevel={batteryLevel}
-                      isConnected={isConnected}
-                      isConnecting={isConnecting}
-                      onConnect={connect}
-                      onOpenCubeInfo={handleOpenCubeInfo}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-1 flex-col items-center gap-0 px-6 pt-2 md:justify-center md:gap-4 md:p-4 md:pt-4">
+                  <StatusBar
+                    solves={solves}
+                    inspectionTime={settings.inspectionTime}
+                    customInspectionTime={settings.customInspectionTime}
+                    onInspectionChange={(time) => updateSetting('inspectionTime', time)}
+                    layoutMode={settings.timerLayoutMode}
+                    onLayoutModeChange={(mode) => updateSetting('timerLayoutMode', mode)}
+                  />
+                  {((timer.status === 'stopped' || manualTimer.status === 'stopped') && lastSolveTime > 0) ? (
+                    <SolveResults
+                      time={lastSolveTime}
+                      moves={lastMoveCount}
+                      analysis={lastAnalysis}
+                      onNextScramble={handleNewScramble}
+                      onRepeatScramble={handleRepeatScramble}
+                      onViewStats={() => {
+                        if (solves.length > 0) {
+                          navigate(`/app/solve/${solves[0].id}`)
+                        }
+                      }}
+                      onDeleteSolve={(id) => {
+                        deleteSolve(id)
+                        handleNewScramble()
+                      }}
+                      scramble={lastScramble}
+                      solve={solves.length > 0 ? solves[0] : undefined}
+                      isManual={manualTimerEnabled}
                     />
+                  ) : (
+                    <>
+                      <ScrambleNotation
+                        trackerState={scrambleState}
+                        timerStatus={timer.status}
+                        time={timer.time}
+                        isManual={manualTimerEnabled}
+                        manualScramble={manualScramble}
+                        isRepeatedScramble={isRepeatedScramble}
+                        inspectionRemaining={timer.inspectionRemaining}
+                      />
 
-                    <RecentSolves solves={solves} />
-                  </>
-                )}
-              </div>
+                      {manualTimerEnabled ? (
+                        <ManualTimerDisplay
+                          status={manualTimer.status}
+                          time={manualTimer.time}
+                          inspectionRemaining={manualTimer.inspectionRemaining}
+                          onConnect={connect}
+                        />
+                      ) : (
+                        <div className="relative aspect-square w-full max-w-[240px] md:max-w-sm">
+                          {!isLoading && (
+                            <CubeViewer
+                              pattern={frozenPattern}
+                              quaternionRef={quaternionRef}
+                              cubeRef={cubeRef}
+                              config={DEFAULT_CONFIG}
+                              animationSpeed={settings.animationSpeed}
+                              cubeColors={cubeColors}
+                            />
+                          )}
+                        </div>
+                      )}
+
+                      <CubeConnectionStatus
+                        batteryLevel={batteryLevel}
+                        isConnected={isConnected}
+                        isConnecting={isConnecting}
+                        onConnect={connect}
+                        onOpenCubeInfo={handleOpenCubeInfo}
+                      />
+
+                      <RecentSolves solves={solves} />
+                    </>
+                  )}
+                </div>
+              )
             } />
             <Route path="account" element={
               <AccountPage

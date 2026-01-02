@@ -75,14 +75,15 @@ export function ManualTimerDisplay({ status, time, inspectionRemaining = 0, onCo
               onClick={onConnect}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="mt-1 hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-colors md:flex"
+              className="mt-3 hidden items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all md:flex"
               style={{
-                color: isHovered ? 'var(--theme-accent)' : 'var(--theme-sub)',
-                backgroundColor: isHovered ? 'var(--theme-subAlt)' : 'transparent',
+                color: isHovered ? 'var(--theme-bg)' : 'var(--theme-accent)',
+                backgroundColor: isHovered ? 'var(--theme-accent)' : 'transparent',
+                borderColor: 'var(--theme-accent)',
               }}
             >
-              <Bluetooth className="h-3.5 w-3.5" />
-              <span>connect to smart cube</span>
+              <Bluetooth className="h-4 w-4" />
+              <span>Connect Smart Cube</span>
             </button>
           )}
         </div>

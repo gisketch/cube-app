@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { applyTheme, type CubeTheme } from '@/lib/themes'
 
 export type InspectionTime = 'none' | '15' | '30' | '60' | 'custom'
+export type TimerLayoutMode = 'minimal' | 'detailed'
 
 export interface AppSettings {
   animationSpeed: number
@@ -11,6 +12,8 @@ export interface AppSettings {
   inspectionTime: InspectionTime
   customInspectionTime: number
   holdThreshold: number
+  timerLayoutMode: TimerLayoutMode
+  showStatsWidget: boolean
 }
 
 const STORAGE_KEY = 'cube-settings'
@@ -23,6 +26,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   inspectionTime: 'none',
   customInspectionTime: 15,
   holdThreshold: 300,
+  timerLayoutMode: 'detailed',
+  showStatsWidget: true,
 }
 
 function loadSettings(): AppSettings {
