@@ -26,7 +26,7 @@
     "cubing": "^0.61.1",
     "firebase": "^12.7.0",
     "framer-motion": "^12.23.26",
-    "gan-web-bluetooth": "github:chribot/gan-web-bluetooth#moyu",
+    "gan-web-bluetooth": "git+https://github.com/chribot/gan-web-bluetooth.git#moyu",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
